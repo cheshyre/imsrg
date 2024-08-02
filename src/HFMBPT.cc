@@ -1127,6 +1127,245 @@ void HFMBPT::UseHFForHoleStates() {
   C_HO2NAT = C * C_HF2NAT; // bug fix suggested by Emily Love
 }
 
+void HFMBPT::UseHFForHoleAndValenceStates() {
+  // std::cout << "NAT overlaps\n";
+  // for (auto i : modelspace->all_orbits) {
+  //   Orbit &oi = modelspace->GetOrbit(i);
+  //   for (int j : Hbare.OneBodyChannels.at(
+  //            {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+  //   {
+  //     double full_overlap = 0.0;
+  //     for (int k : Hbare.OneBodyChannels.at(
+  //              {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+  //     {
+  //       full_overlap += C_HF2NAT(k, i) * C_HF2NAT(k, j);
+  //     }
+
+  //     std::cout << "states i, j = " << std::setw(3) << i << ", " << std::setw(3)
+  //               << j << ", " << std::setw(12) << full_overlap << "\n";
+  //   }
+  // }
+
+  std::cout << "Setting core and valence states back to HF\n";
+  for (auto i : modelspace->all_orbits) {
+    Orbit &oi = modelspace->GetOrbit(i);
+    // cvq == 2 is outside. 0, 1 are core and valence
+    if (oi.cvq < 2 ) {
+      for (auto j : modelspace->all_orbits) {
+        if (j == i) {
+          C_HF2NAT(j, i) = 1.0;
+        } else {
+          C_HF2NAT(j, i) = 0.0;
+          C_HF2NAT(i, j) = 0.0;
+        }
+      }
+    }
+  }
+
+  // std::cout << "Post-HF reference fixing overlaps\n";
+  // for (auto i : modelspace->all_orbits) {
+  //   Orbit &oi = modelspace->GetOrbit(i);
+  //   for (int j : Hbare.OneBodyChannels.at(
+  //            {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+  //   {
+  //     double full_overlap = 0.0;
+  //     for (int k : Hbare.OneBodyChannels.at(
+  //              {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+  //     {
+  //       full_overlap += C_HF2NAT(k, i) * C_HF2NAT(k, j);
+  //     }
+
+  //     std::cout << "states i, j = " << std::setw(3) << i << ", " << std::setw(3)
+  //               << j << ", " << std::setw(12) << full_overlap << "\n";
+  //   }
+  // }
+
+  std::cout << "Performing Gram-Schmidt\n";
+  // Gram Schmidt for all orbitals
+  for (auto i : modelspace->all_orbits) {
+    Orbit &oi = modelspace->GetOrbit(i);
+    for (int j : Hbare.OneBodyChannels.at(
+             {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+    {
+      if (j >= i)
+        continue;
+      double ij_overlap = 0.0;
+      double jj_overlap = 0.0;
+      for (int k : Hbare.OneBodyChannels.at(
+               {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+      {
+        ij_overlap += C_HF2NAT(k, i) * C_HF2NAT(k, j);
+        jj_overlap += C_HF2NAT(k, j) * C_HF2NAT(k, j);
+      }
+      for (int k : Hbare.OneBodyChannels.at(
+               {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+      {
+        C_HF2NAT(k, i) -= ij_overlap / jj_overlap * C_HF2NAT(k, j);
+        // ij_overlap += C_HF2NAT(k, i) * C_HF2NAT(k, j);
+        // jj_overlap += C_HF2NAT(k, j) * C_HF2NAT(k, j);
+      }
+    }
+  }
+
+  // std::cout << "Post Gram-Schmidt overlaps\n";
+  // for (auto i : modelspace->all_orbits) {
+  //   Orbit &oi = modelspace->GetOrbit(i);
+  //   for (int j : Hbare.OneBodyChannels.at(
+  //            {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+  //   {
+  //     double full_overlap = 0.0;
+  //     for (int k : Hbare.OneBodyChannels.at(
+  //              {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+  //     {
+  //       full_overlap += C_HF2NAT(k, i) * C_HF2NAT(k, j);
+  //     }
+
+  //     std::cout << "states i, j = " << std::setw(3) << i << ", " << std::setw(3)
+  //               << j << ", " << std::setw(12) << full_overlap << "\n";
+  //   }
+  // }
+
+  std::cout << "Re-normalizing orbitals\n";
+  // Gram Schmidt for all orbitals
+  for (auto i : modelspace->all_orbits) {
+    Orbit &oi = modelspace->GetOrbit(i);
+    double ii_overlap = 0.0;
+    for (int j : Hbare.OneBodyChannels.at(
+             {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+    {
+      ii_overlap += C_HF2NAT(j, i) * C_HF2NAT(j, i);
+    }
+    for (int j : Hbare.OneBodyChannels.at(
+             {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+    {
+      C_HF2NAT(j, i) *= 1 / std::sqrt(ii_overlap);
+    }
+  }
+
+  // std::cout << "Final overlaps\n";
+  // for (auto i : modelspace->all_orbits) {
+  //   Orbit &oi = modelspace->GetOrbit(i);
+  //   for (int j : Hbare.OneBodyChannels.at(
+  //            {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+  //   {
+  //     double full_overlap = 0.0;
+  //     for (int k : Hbare.OneBodyChannels.at(
+  //              {oi.l, oi.j2, oi.tz2})) // j runs over HO states
+  //     {
+  //       full_overlap += C_HF2NAT(k, i) * C_HF2NAT(k, j);
+  //     }
+
+  //     std::cout << "states i, j = " << std::setw(3) << i << ", " << std::setw(3)
+  //               << j << ", " << std::setw(12) << full_overlap << "\n";
+  //   }
+  // }
+
+  // Copied from get NAT orbitals because I don't know what logic also needs to happen after C_HF2NAT is set.
+  int norbits = HartreeFock::modelspace->GetNumberOrbits();
+  int A = HartreeFock::modelspace->GetTargetMass();
+  double AfromTr = 0.0;
+  for(int i=0; i< norbits; ++i)
+  {
+    Orbit& oi = HartreeFock::modelspace->GetOrbit(i);
+    AfromTr += rho(i,i) * (oi.j2+1);
+  }
+
+  if(std::abs(AfromTr - A) > 1e-8)
+  {
+    std::cout << "Warning: Mass != Tr(rho)   " << A << " != " << AfromTr <<  std::endl;
+    exit(0);
+  }
+  C_HO2NAT = C * C_HF2NAT;
+
+  // set the occ_nat values
+  for ( auto i : modelspace->all_orbits)
+  {
+    Orbit& oi = modelspace->GetOrbit(i);
+    oi.occ_nat = std::abs(Occ(i));  // it's possible that Occ(i) is negative, and for occ_nat, we don't want that.
+  }
+
+  if (use_NAT_occupations) // use fractional occupation
+  {
+
+    double keep_occ_threshold = 0.02; // anything with occupation less than keep_occ_threshold gets set to zero, otherwise everything is a hole.
+
+    double NfromTr=0;
+    double ZfromTr=0;
+    std::cout << "Switching to occupation numbers obtained from 2nd order 1b density matrix." << std::endl;
+    std::vector<index_t> holeorbs_tmp;
+    std::vector<double> hole_occ_tmp;
+    // Figure out how many particles are living in orbits with occupations above our threshold.
+    // We do this separately for protons and neutrons.
+    for(auto& i : modelspace->all_orbits)
+    {
+      Orbit& oi = HartreeFock::modelspace->GetOrbit(i);
+      if (Occ(i) > keep_occ_threshold)
+      {
+        holeorbs_tmp.push_back(i);
+        hole_occ_tmp.push_back(Occ(i));
+        NfromTr += (1+oi.tz2)/2 * Occ(i) * (oi.j2+1);
+        ZfromTr += (1-oi.tz2)/2 * Occ(i) * (oi.j2+1);
+      }
+    }
+
+    // Now do the back-filling.
+    int Z = modelspace->GetZref();
+    int N = A-Z;
+    double aloquot = 0.005; // This is how much we increase an occupation in each back-filling pass.
+
+   // Back-fill the protons
+    while ( (Z-ZfromTr) > ModelSpace::OCC_CUT )
+    {
+      for (size_t i=0; i<holeorbs_tmp.size(); i++)
+      {
+        Orbit& oi = HartreeFock::modelspace->GetOrbit(holeorbs_tmp[i]);
+        if ( oi.tz2 >0 ) continue;
+        double occ_increase = std::min( { aloquot, (Z-ZfromTr)/(oi.j2+1.), 1.0-hole_occ_tmp[i] } );
+        hole_occ_tmp[i] += occ_increase;
+        ZfromTr += occ_increase * (oi.j2+1);
+        if ( (Z-ZfromTr) < ModelSpace::OCC_CUT ) break;
+      }
+    }
+
+   // Back-fill the neutrons
+    while ( (N-NfromTr) > ModelSpace::OCC_CUT )
+    {
+      for (size_t i=0; i<holeorbs_tmp.size(); i++)
+      {
+        Orbit& oi = HartreeFock::modelspace->GetOrbit(holeorbs_tmp[i]);
+        if ( oi.tz2 <0 ) continue;
+        double occ_increase = std::min( { aloquot, (N-NfromTr)/(oi.j2+1.), 1.0-hole_occ_tmp[i] } );
+        hole_occ_tmp[i] += occ_increase;
+        NfromTr += occ_increase * (oi.j2+1);
+        if ( (N-NfromTr) < ModelSpace::OCC_CUT ) break;
+      }
+    }
+
+    holeorbs = arma::uvec( holeorbs_tmp );
+    hole_occ = arma::rowvec( hole_occ_tmp );
+
+    // Now we tell modelspace about the new occupations, and any needed reclassification of 'holes' and 'particles'
+    UpdateReference();
+
+   // Calling UpdateReference screws up the occ_nat values, so we need to set them again here.
+    for ( auto i : HartreeFock::modelspace->all_orbits )
+    {
+      auto& oi = HartreeFock::modelspace->GetOrbit(i);
+      oi.occ_nat = std::abs(Occ(i));  // it's possible that Occ(i) is negative, and for occ_nat, we don't want that.
+    }
+
+  } // if use_NAT_occupations
+
+  // In principle, this could be iterated until self-consistency. But I don't do that for now. This would only have an impact
+  // if the energy ordering of occupied and unoccupied levels gets flipped, which would be a fairly pathological case.
+  arma::mat tmp = C_HO2NAT.cols(holeorbs);
+  rho = (tmp.each_row() % hole_occ) * tmp.t(); // now rho is in the HO basis, with our prescribed occupations in the NAT basis
+  UpdateF();  // Now F is in the HO basis, but with rho from filling in the NAT basis.
+
+  ReorderHFMBPTCoefficients();
+  C_HO2NAT = C * C_HF2NAT; // bug fix suggested by Emily Love
+}
+
 
 //*********************************************************************
 // Specialization of the HartreeFock version. This is because we want

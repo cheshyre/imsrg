@@ -106,6 +106,7 @@ std::map<std::string,std::string> Parameters::string_par = {
   {"write_HF_ops",              "false"},       // Write the HF operators before doing IMSRG transformation ; Added by Antoine Belley
   {"denominator_partitioning",  "Epstein_Nesbet"}, // Denominators used in IMSRG generators. Can be Moller_Plesset or Epstein_Nesbet.
   {"use_HF_reference_in_NAT",   "false"},       // Use HF reference state after constructing NAT, virtual orbitals will still approximately be NAT
+  {"use_HF_valence_in_NAT",   "false"},       // Use HF valence states after constructing NAT, virtual orbitals will still approximately be NAT (does nothing if no use_HF_reference_in_NAT)
 };
 
 

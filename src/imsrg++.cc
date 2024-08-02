@@ -123,6 +123,7 @@ int main(int argc, char** argv)
   bool write_HO_ops = parameters.s("write_HO_ops") == "true";  // added by Antoine Belley
   bool write_HF_ops = parameters.s("write_HF_ops") == "true";  // added by Antoine Belley
   bool use_HF_reference_in_NAT = parameters.s("use_HF_reference_in_NAT") == "true";
+  bool use_HF_valence_in_NAT = parameters.s("use_HF_valence_in_NAT") == "true";
 
   int eMax = parameters.i("emax");
   int lmax = parameters.i("lmax"); // so far I only use this with atomic systems.
@@ -599,7 +600,11 @@ if (opff.file2name != "") {
 //  Then it calls DiagonalizeRho() which diagonalizes the density matrix, yielding the natural orbital basis.
     hf.GetNaturalOrbitals();
     if (use_HF_reference_in_NAT) {
-	    hf.UseHFForHoleStates();
+      if (use_HF_valence_in_NAT) {
+        hf.UseHFForHoleAndValenceStates();
+      } else {
+	      hf.UseHFForHoleStates();
+      }
     }
     HNO = hf.GetNormalOrderedHNAT( hno_particle_rank );
 
