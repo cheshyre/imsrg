@@ -77,7 +77,7 @@ void ThreeBodyStorage_iso::Allocate()
   OrbitIndexHash.clear();
   E3max = modelspace->GetE3max();
   int norbits = modelspace->GetNumberOrbits();
-  std::cout << "Begin AllocateThreeBody() in " << __FILE__ << " with E3max = " << E3max << " norbits = " << norbits << std::endl;
+  // std::cout << "Begin AllocateThreeBody() in " << __FILE__ << " with E3max = " << E3max << " norbits = " << norbits << std::endl;
   int lmax = 50000; // maybe do something with this later...
   total_dimension = 0;
 
@@ -151,10 +151,10 @@ void ThreeBodyStorage_iso::Allocate()
   } //a
 
   MatEl.resize(total_dimension,0.0);
-  std::cout << "Allocated " << total_dimension << " three body matrix elements (" <<  total_dimension * sizeof(isoME_type)/1024./1024./1024. << " GB), "
-       << std::endl << "  number of buckets in hash table: " << OrbitIndexHash.bucket_count() << "  and load factor = " << OrbitIndexHash.load_factor()
-       << "  estimated storage ~ " << ((OrbitIndexHash.bucket_count()+OrbitIndexHash.size()) * (sizeof(size_t)+sizeof(void*))) / (1024.*1024.*1024.) << " GB"
-       << std::endl;
+  // std::cout << "Allocated " << total_dimension << " three body matrix elements (" <<  total_dimension * sizeof(isoME_type)/1024./1024./1024. << " GB), "
+  //      << std::endl << "  number of buckets in hash table: " << OrbitIndexHash.bucket_count() << "  and load factor = " << OrbitIndexHash.load_factor()
+  //      << "  estimated storage ~ " << ((OrbitIndexHash.bucket_count()+OrbitIndexHash.size()) * (sizeof(size_t)+sizeof(void*))) / (1024.*1024.*1024.) << " GB"
+      //  << std::endl;
   is_allocated = true;
 }
 

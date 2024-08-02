@@ -962,10 +962,10 @@ if (opff.file2name != "") {
     return 0;
   }
 
-  std::cout << " " << __FILE__ << " line " << __LINE__ << "noperators = " << HNO.profiler.counter["N_Operators"] << std::endl;
+  // std::cout << " " << __FILE__ << " line " << __LINE__ << "noperators = " << HNO.profiler.counter["N_Operators"] << std::endl;
 
   IMSRGSolver imsrgsolver(HNO);
-  std::cout << " " << __FILE__ << " line " << __LINE__ << "noperators = " << HNO.profiler.counter["N_Operators"] << std::endl;
+  // std::cout << " " << __FILE__ << " line " << __LINE__ << "noperators = " << HNO.profiler.counter["N_Operators"] << std::endl;
 //  imsrgsolver.SetHin(HNO); // necessary?
   imsrgsolver.SetReadWrite(rw);
   imsrgsolver.SetMethod(method);
@@ -1017,11 +1017,11 @@ if (opff.file2name != "") {
   }
   if (IMSRG3)
   {
-    std::cout << "Using IMSRG(3) commutators. This will probably be slow..." << std::endl;
+    // std::cout << "Using IMSRG(3) commutators. This will probably be slow..." << std::endl;
   }
   if (imsrg3_n7)
   {
-    std::cout << "  only including IMSRG3 commutator terms that scale up to n7" << std::endl;
+    // std::cout << "  only including IMSRG3 commutator terms that scale up to n7" << std::endl;
   }
   if (reduced_232_impl) {
     std::cout << "  using comm232ss implementation fully restricted to emax_3body" << std::endl;
@@ -1058,7 +1058,7 @@ if (opff.file2name != "") {
 
   if (IMSRG3)
   {
-    std::cout << "Norm of 3-body = " << imsrgsolver.GetH_s().ThreeBodyNorm() << std::endl;
+    // std::cout << "Norm of 3-body = " << imsrgsolver.GetH_s().ThreeBodyNorm() << std::endl;
   }
   if ( perturbative_triples and ((method=="magnus") || (method == "magnus_backoff")) )
   {
@@ -1464,7 +1464,7 @@ if (opff.file2name != "") {
 
         // op = hf.GetNormalOrdered3BOperator(op) + op_2b.DoNormalOrdering();
       }
-      std::cout << std::setprecision(24) << "   HF: " << op.ZeroBody << std::endl;
+      // std::cout << std::setprecision(24) << "   HF: " << op.ZeroBody << std::endl;
       std::cout << opname << "_HF: " << op.ZeroBody << std::endl;
 
       if ( (eMax_imsrg != -1) or (e2Max_imsrg != -1) or (e3Max_imsrg) != -1)
@@ -1473,6 +1473,8 @@ if (opff.file2name != "") {
         std::cout << "Truncating modelspace for IMSRG calculation: emax e2max e3max  ->  " << eMax_imsrg << " " << e2Max_imsrg << " " << e3Max_imsrg << std::endl;
         op = op.Truncate(modelspace_imsrg);
       }
+      // std::cout << std::setprecision(24) << "   HF: " << op.ZeroBody << std::endl;
+      std::cout << opname << "_HF: " << op.ZeroBody << std::endl;
 
 
       // Added by Antoine Belley
@@ -1518,14 +1520,14 @@ if (opff.file2name != "") {
       //   }
       }
 //      std::cout << " (" << ops[i].ZeroBody << " ) " << std::endl;
-      std::cout << "   IMSRG: " << op.ZeroBody << std::endl;
+      // std::cout << "   IMSRG: " << op.ZeroBody << std::endl;
       std::cout << opname << "_IMSRG: " << op.ZeroBody << std::endl;
 //      rw.WriteOperatorHuman(ops[i],intfile+opnames[i]+"_step2.op");
 //      std::cout << "After renormal ordering Op(5,4) is " << std::setprecision(10) << op.OneBody(5,4) << std::endl;
 
 
 
-    std::cout << "      " << op.GetJRank() << " " << op.GetTRank() << " " << op.GetParity() << "   " << op.GetNumberLegs() << std::endl;
+    // std::cout << "      " << op.GetJRank() << " " << op.GetTRank() << " " << op.GetParity() << "   " << op.GetNumberLegs() << std::endl;
     if ( ((op.GetJRank()+op.GetTRank()+op.GetParity())<1) and (op.GetNumberLegs()%2==0) )
     {
        std::cout << "writing scalar files " << std::endl;
@@ -1699,7 +1701,7 @@ if (opff.file2name != "") {
 
   if (IMSRG3)
   {
-    std::cout << "Norm of 3-body = " << imsrgsolver.GetH_s().ThreeBodyNorm() << std::endl;
+    // std::cout << "Norm of 3-body = " << imsrgsolver.GetH_s().ThreeBodyNorm() << std::endl;
   }
   Hbare.PrintTimes();
 

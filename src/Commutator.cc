@@ -584,7 +584,7 @@ Operator Standard_BCH_Transform( const Operator& OpIn, const Operator &Omega)
 //   if (use_imsrg3  )
    if (use_imsrg3 and not OpOut.ThreeBody.IsAllocated() )
    {
-     std::cout << __func__ << "  Allocating Three Body with pn mode" << std::endl;
+    //  std::cout << __func__ << "  Allocating Three Body with pn mode" << std::endl;
      OpOut.ThreeBody.SetMode("pn");
      OpOut.SetParticleRank(3);
    }

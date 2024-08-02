@@ -108,8 +108,8 @@ void ThreeBodyStorage_pn::Allocate()
   MatEl.resize(total_dimension,0.0);
   if (none_allocated)
   {
-     std::cout << "DONE ALLOCATING PN 3-body, size of MatEl is " << MatEl.size()
-               << "  ->  " <<MatEl.size()*sizeof(pnME_type) / (1024.*1024.*1024.) << " GB" << std::endl;
+    //  std::cout << "DONE ALLOCATING PN 3-body, size of MatEl is " << MatEl.size()
+    //            << "  ->  " <<MatEl.size()*sizeof(pnME_type) / (1024.*1024.*1024.) << " GB" << std::endl;
   }
 //  std::cout << " ... allocation successful." << std::endl;
   is_allocated = true;

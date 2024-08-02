@@ -907,14 +907,14 @@ Operator IMSRGSolver::Transform_Partial(Operator& OpIn, int n)
      std::ostringstream filename;
 //     filename << rw->GetScratchDir().c_str() << "/OMEGA_" << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << i;
      filename << scratchdir.c_str() << "/OMEGA_" << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << i;
-     std::cout << "Transforming using " << filename.str() << std::endl;
+    //  std::cout << "Transforming using " << filename.str() << std::endl;
      std::ifstream ifs(filename.str(),std::ios::binary);
      omega.ReadBinary(ifs);
 //     if (OpIn.GetJRank()>0) cout << "step " << i << endl;
 //     OpOut = OpOut.BCH_Transform( omega );
      OpOut = Commutator::BCH_Transform( OpOut, omega );
-     std::cout << "norm of omega = " << omega.Norm() << std::endl;
-     std::cout << " op zero body = " << OpOut.ZeroBody << std::endl;
+    //  std::cout << "norm of omega = " << omega.Norm() << std::endl;
+    //  std::cout << " op zero body = " << OpOut.ZeroBody << std::endl;
 //     if (OpIn.GetJRank()>0)cout << "done" << endl;
     }
   }
