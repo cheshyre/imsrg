@@ -1179,6 +1179,15 @@ if (opff.file2name != "") {
   }
 */
 
+    HNO = imsrgsolver.GetH_s();
+    rw.Write_me1j("H1B_RefStateNO_for_Andrea_emax_4.me1j", HNO, 4, 4);
+    rw.Write_me2jp("H2B_RefStateNO_for_Andrea_emax_4.me2jp", HNO, 4, 8, 4);
+    HNO = HNO.UndoNormalOrdering();
+    rw.Write_me1j("H1B_VacuumNO_for_Andrea_emax_4.me1j", HNO, 4, 4);
+    rw.Write_me2jp("H2B_VacuumNO_for_Andrea_emax_4.me2jp", HNO, 4, 8, 4);
+    HNO = HNO.DoNormalOrdering();
+    rw.Write_me1j("H1B_RefStateNOnew_for_Andrea_emax_4.me1j", HNO, 4, 4);
+    rw.Write_me2jp("H2B_RefStateNOnew_for_Andrea_emax_4.me2jp", HNO, 4, 8, 4);
 
   // If we're doing targeted/ensemble normal ordering
   // we now re-normal order wrt to the core
