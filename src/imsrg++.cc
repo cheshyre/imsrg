@@ -1220,11 +1220,11 @@ if (opff.file2name != "") {
     for ( auto i : modelspace_imsrg.all_orbits ) std::cout << "  " << i << " : " << HNO.OneBody(i,i) << std::endl;
     if (IMSRG3)
     {
-      rw.Write_NaiveVS3B(intfile + ".vs3b", HNO);
+      // rw.Write_NaiveVS3B(intfile + ".vs3b", HNO);
       // Use emax=3 because we are interested in pf shell systems
-      rw.Write_me1j(intfile + "_ENO" + emax_ref_string + ".me1j", HNO, emax_reference, emax_reference);
-      rw.Write_me2jp(intfile + "_ENO" + emax_ref_string + ".me2jp", HNO, emax_reference, 2 * emax_reference, emax_reference);
-      rw.Write_me3jp(intfile + "_ENO" + emax3b_ref_string + e3max_ref_string + ".me3jp", HNO, emax_3b_reference, 2 * emax_3b_reference, e3max_reference);
+      // rw.Write_me1j(intfile + "_ENO" + emax_ref_string + ".me1j", HNO, emax_reference, emax_reference);
+      // rw.Write_me2jp(intfile + "_ENO" + emax_ref_string + ".me2jp", HNO, emax_reference, 2 * emax_reference, emax_reference);
+      // rw.Write_me3jp(intfile + "_ENO" + emax3b_ref_string + e3max_ref_string + ".me3jp", HNO, emax_3b_reference, 2 * emax_3b_reference, e3max_reference);
       std::cout << "Re-normal-ordering wrt the core. For now, we just throw away the 3N at this step." << std::endl;
       HNO.SetNumberLegs(4);
       HNO.SetParticleRank(2);
@@ -1235,11 +1235,11 @@ if (opff.file2name != "") {
     std::cout << "Doing NO wrt A=" << ms2.GetAref() << " Z=" << ms2.GetZref() << "  norbits = " << ms2.GetNumberOrbits() << std::endl;
     HNO = HNO.DoNormalOrdering();
 
-    rw.Write_NaiveVS1B(intfile + ".vs1b", HNO);
-    rw.Write_NaiveVS2B(intfile + ".vs2b", HNO);
-    // Use emax=3 because we are interested in pf shell systems
-    rw.Write_me1j(intfile + "_coreNO" + emax_ref_string + ".me1j", HNO, emax_reference, emax_reference);
-    rw.Write_me2jp(intfile + "_coreNO" + emax_ref_string + ".me2jp", HNO, emax_reference, 2 * emax_reference, emax_reference);
+    // rw.Write_NaiveVS1B(intfile + ".vs1b", HNO);
+    // rw.Write_NaiveVS2B(intfile + ".vs2b", HNO);
+    // // Use emax=3 because we are interested in pf shell systems
+    // rw.Write_me1j(intfile + "_coreNO" + emax_ref_string + ".me1j", HNO, emax_reference, emax_reference);
+    // rw.Write_me2jp(intfile + "_coreNO" + emax_ref_string + ".me2jp", HNO, emax_reference, 2 * emax_reference, emax_reference);
 
     imsrgsolver.FlowingOps[0] = HNO;
 
@@ -1500,22 +1500,22 @@ if (opff.file2name != "") {
       if (renormal_order) 
       {
 	      if (IMSRG3) {
-		      rw.Write_me1j(intfile + opname + "_ENO" + emax_ref_string + ".me1j", op, emax_reference, emax_reference);
-		      rw.Write_me2jp(intfile + opname + "_ENO" + emax_ref_string + ".me2jp", op, emax_reference, 2 * emax_reference, emax_reference);
-		      rw.Write_me3jp(intfile + opname + "_ENO" + emax3b_ref_string + e3max_ref_string + ".me3jp", op, emax_3b_reference, 2 * emax_3b_reference, e3max_reference);
-      		      rw.Write_NaiveVS3B(intfile + opname + ".vs3b", op);
+		      // rw.Write_me1j(intfile + opname + "_ENO" + emax_ref_string + ".me1j", op, emax_reference, emax_reference);
+		      // rw.Write_me2jp(intfile + opname + "_ENO" + emax_ref_string + ".me2jp", op, emax_reference, 2 * emax_reference, emax_reference);
+		      // rw.Write_me3jp(intfile + opname + "_ENO" + emax3b_ref_string + e3max_ref_string + ".me3jp", op, emax_3b_reference, 2 * emax_3b_reference, e3max_reference);
+      		//       rw.Write_NaiveVS3B(intfile + opname + ".vs3b", op);
 		      op.SetNumberLegs(4);
 		      op.SetParticleRank(2);
 	      }
         op = op.UndoNormalOrdering();
         op.SetModelSpace(ms2);
         op = op.DoNormalOrdering();
-        if ((op.GetJRank() == 0) && (op.GetTRank() == 0) && (op.GetParity() == 0)) {
-        rw.Write_NaiveVS1B(intfile + opname + ".vs1b", op);
-        rw.Write_NaiveVS2B(intfile + opname + ".vs2b", op);
-	    rw.Write_me1j(intfile + opname + "_coreNO" + emax_ref_string + ".me1j", op, emax_reference, emax_reference);
-	    rw.Write_me2jp(intfile + opname + "_coreNO" + emax_ref_string + ".me2jp", op, emax_reference, 2 * emax_reference, emax_reference);
-        }
+      //   if ((op.GetJRank() == 0) && (op.GetTRank() == 0) && (op.GetParity() == 0)) {
+      //   rw.Write_NaiveVS1B(intfile + opname + ".vs1b", op);
+      //   rw.Write_NaiveVS2B(intfile + opname + ".vs2b", op);
+	    // rw.Write_me1j(intfile + opname + "_coreNO" + emax_ref_string + ".me1j", op, emax_reference, emax_reference);
+	    // rw.Write_me2jp(intfile + opname + "_coreNO" + emax_ref_string + ".me2jp", op, emax_reference, 2 * emax_reference, emax_reference);
+      //   }
       }
 //      std::cout << " (" << ops[i].ZeroBody << " ) " << std::endl;
       std::cout << "   IMSRG: " << op.ZeroBody << std::endl;
