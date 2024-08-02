@@ -6249,7 +6249,7 @@ void comm133ss( const Operator& X, const Operator& Y, Operator& Z )
    Z.profiler.timer["_" + std::string(__func__) + "_allocate_matrices"] += omp_get_wtime() - t_internal;
    t_internal = omp_get_wtime();
 
-    #pragma omp parallel for schedule(dynamic,100)
+    // #pragma omp parallel for schedule(dynamic,100)
     for (size_t index_bra=0; index_bra<nkets_kept; index_bra++)
     {
       size_t ibra = kets_kept[index_bra];
