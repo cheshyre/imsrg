@@ -1501,6 +1501,17 @@ if (opff.file2name != "") {
 
 
       op = imsrgsolver.Transform(op);
+      std::cout << opname << "_IMSRG: " << op.ZeroBody << std::endl;
+      std::cout << opname << "_IMSRG_1BDIAG: ";
+      bool first = true;
+      for ( auto i : modelspace_imsrg.all_orbits ) {
+        if (!first) {
+          std::cout << ", ";
+        }
+        first = false;
+        std::cout << op.OneBody(i,i);
+      }
+      std::cout << "\n";
 
       // Unclear whether we should do NO2B here as well...
       // std::cout << "Before renormal ordering Op(5,4) is " << std::setprecision(10) << op.OneBody(5,4) << std::endl;
@@ -1523,10 +1534,10 @@ if (opff.file2name != "") {
 	    // rw.Write_me1j(intfile + opname + "_coreNO" + emax_ref_string + ".me1j", op, emax_reference, emax_reference);
 	    // rw.Write_me2jp(intfile + opname + "_coreNO" + emax_ref_string + ".me2jp", op, emax_reference, 2 * emax_reference, emax_reference);
       //   }
+        std::cout << opname << "_IMSRG_VS: " << op.ZeroBody << std::endl;
       }
 //      std::cout << " (" << ops[i].ZeroBody << " ) " << std::endl;
       // std::cout << "   IMSRG: " << op.ZeroBody << std::endl;
-      std::cout << opname << "_IMSRG: " << op.ZeroBody << std::endl;
 //      rw.WriteOperatorHuman(ops[i],intfile+opnames[i]+"_step2.op");
 //      std::cout << "After renormal ordering Op(5,4) is " << std::setprecision(10) << op.OneBody(5,4) << std::endl;
 
