@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <string>
 #include <omp.h>
+#include <vector>
 #include "Commutator.hh"
 #include "IMSRG.hh"
 #include "Parameters.hh"
@@ -73,7 +74,11 @@ int main(int argc, char** argv)
   if (parameters.help_mode) return 0;
 
   std::string inputtbme = parameters.s("2bme");
-  std::string input3bme = parameters.s("3bme");
+  const std::string input3bme_c1 = parameters.s("3bme_c1");
+  const std::string input3bme_c3 = parameters.s("3bme_c3");
+  const std::string input3bme_c4 = parameters.s("3bme_c4");
+  const std::string input3bme_cD = parameters.s("3bme_cD");
+  const std::string input3bme_cE = parameters.s("3bme_cE");
   std::string input3bme_type = parameters.s("3bme_type");
   std::string no2b_precision = parameters.s("no2b_precision");
   std::string reference = parameters.s("reference");
@@ -154,6 +159,11 @@ int main(int argc, char** argv)
 ////  if (e3Max_imsrg==-1 and eMax_imsrg != -1) e3Max_imsrg = std::min(E3max, 3*eMax_imsrg);
 
   double hw = parameters.d("hw");
+  const double c1 = parameters.d("c1");
+  const double c3 = parameters.d("c3");
+  const double c4 = parameters.d("c4");
+  const double cD = parameters.d("cD");
+  const double cE = parameters.d("cE");
   double smax = parameters.d("smax");
   double ode_tolerance = parameters.d("ode_tolerance");
   double dsmax = parameters.d("dsmax");
@@ -168,6 +178,9 @@ int main(int argc, char** argv)
   double dE3max = parameters.d("dE3max");
   double OccNat3Cut = parameters.d("OccNat3Cut");
   double threebody_threshold = parameters.d("threebody_threshold");
+
+  const std::vector<std::string> input3bmes = { input3bme_c1, input3bme_c3, input3bme_c4, input3bme_cD, input3bme_cE};
+  const std::vector<double> input3bme_LECs = {c1, c3, c4, cD, cE};
 
   std::vector<std::string> opnames = parameters.v("Operators");
   std::vector<std::string> opsfromfile = parameters.v("OperatorsFromFile");
@@ -192,13 +205,14 @@ int main(int argc, char** argv)
       return 1;
     }
   }
-  // test 3bme file
-  if (input3bme != "none")
-  {
-    if( not std::ifstream(input3bme).good() )
-    {
-      std::cout << "trouble reading " << input3bme << " exiting. " << std::endl;
-      return 1;
+  // test 3bme files
+  for (const auto &input3bme : input3bmes) {
+    if (input3bme != "none") {
+      if (!std::ifstream(input3bme).good()) {
+        std::cout << "trouble reading " << input3bme << " exiting. "
+                  << std::endl;
+        return 1;
+      }
     }
   }
 
@@ -434,10 +448,16 @@ if (opff.file2name != "") {
 
 
 //  std::cout << "Making the Hamiltonian..." << std::endl;
-  int particle_rank = input3bme=="none" ? 2 : 3;
-  Operator Hbare = Operator(modelspace,0,0,0,particle_rank);
+  int particle_rank = 2;
+  for (const auto &input3bme : input3bmes) {
+    if (input3bme != "none") {
+      particle_rank = 3;
+    }
+  }
+  Operator Hbare = Operator(modelspace, 0, 0, 0, particle_rank);
   Hbare.SetHermitian();
-
+  Operator Hbare_temp = Operator(modelspace, 0, 0, 0, particle_rank);
+  Hbare_temp.SetHermitian();
 
   Commutator::SetUseGooseTank(goose_tank);
   Commutator::SetThreebodyThreshold(threebody_threshold);
@@ -475,27 +495,35 @@ if (opff.file2name != "") {
   }
 
   // Read in the 3-body file
-  if (Hbare.particle_rank >=3)
-  {
-    if(input3bme_type == "full")
-    {
-      rw.Read_Darmstadt_3body(input3bme, Hbare, file3e1max,file3e2max,file3e3max);
-    }
-    if(input3bme_type == "no2b")
-    {
+  if (Hbare.particle_rank >= 3) {
+    for (std::size_t i = 0; i < input3bmes.size(); i += 1) {
+      const std::string input3bme = input3bmes[i];
+      const double coeff = input3bme_LECs[i];
+      if ((input3bme == "none") || (coeff == 0.0)) {
+        continue;
+      }
+      if (input3bme_type == "full") {
+        rw.Read_Darmstadt_3body(input3bme, Hbare_temp, file3e1max, file3e2max,
+                                file3e3max);
+      }
+      if (input3bme_type == "no2b") {
 
-      Hbare.ThreeBody.SetMode("no2b");
-      if (no2b_precision == "half")  Hbare.ThreeBody.SetMode("no2bhalf");
+        Hbare_temp.ThreeBody.SetMode("no2b");
+        if (no2b_precision == "half")
+          Hbare_temp.ThreeBody.SetMode("no2bhalf");
 
-      Hbare.ThreeBody.ReadFile( {input3bme}, {file3e1max, file3e2max, file3e3max, file3e1max} );
-      rw.File3N = input3bme;
+        Hbare_temp.ThreeBody.ReadFile(
+            {input3bme}, {file3e1max, file3e2max, file3e3max, file3e1max});
+        rw.File3N = input3bme;
 
-    }
-    else if(input3bme_type == "mono")
-    {
-      Hbare.ThreeBody.SetMode("mono");
-      Hbare.ThreeBody.ReadFile( {input3bme}, {file3e1max, file3e2max, file3e3max, file3e1max} );
-      rw.File3N = input3bme;
+      } else if (input3bme_type == "mono") {
+        Hbare_temp.ThreeBody.SetMode("mono");
+        Hbare_temp.ThreeBody.ReadFile(
+            {input3bme}, {file3e1max, file3e2max, file3e3max, file3e1max});
+        rw.File3N = input3bme;
+      }
+      Hbare += coeff * Hbare_temp;
+      Hbare_temp.EraseThreeBody();
     }
     std::cout << "done reading 3N" << std::endl;
   }

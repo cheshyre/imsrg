@@ -59,6 +59,11 @@ class Parameters
 std::map<std::string,std::string> Parameters::string_par = {
   {"2bme",			"none"},        // name of file containing 2-body matrix elements
   {"3bme",			"none"},        // name of file containing 3-body matrix elements
+  {"3bme_c1",			"none"},        // name of file containing 3-body matrix elements for c1=1.0
+  {"3bme_c3",			"none"},        // name of file containing 3-body matrix elements for c3=1.0
+  {"3bme_c4",			"none"},        // name of file containing 3-body matrix elements for c4=1.0
+  {"3bme_cD",			"none"},        // name of file containing 3-body matrix elements for cD=1.0
+  {"3bme_cE",			"none"},        // name of file containing 3-body matrix elements for cE=1.0
   {"3bme_type",			"full"},        // are the 3-body matrix elements in NO2B format, or do we get all of them (full)?
   {"no2b_precision",		"single"},      // if we use the no2b file type, do we store with single precision, or half precision?
   {"core_generator",		"atan"},	// generator used for core part of 2-step decoupling
@@ -126,6 +131,11 @@ std::map<std::string,double> Parameters::double_par = {
   {"dE3max",		  99},  // cut on energies which limits the 3-body states considered in IMSRG(3) commutators
   {"OccNat3Cut",	  -1},  // cut on natural orbital occupations which limits the 3-body states considered in IMSRG(3) commutators
   {"threebody_threshold",  0},   // when the norm of A or B is below threebody_threshold, don't use IMSRG(3) in evaluating [A,B].
+  {"c1",		0.0},
+  {"c3",		0.0},
+  {"c4",		0.0},
+  {"cD",		0.0},
+  {"cE",		0.0},
 
 };
 
