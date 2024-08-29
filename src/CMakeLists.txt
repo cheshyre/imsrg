@@ -568,6 +568,20 @@ target_link_libraries(
 )
 
 add_executable(
+    imsrg++_3n_combine
+    imsrg++_3n_combine.cc
+)
+target_link_libraries(
+    imsrg++_3n_combine
+    PUBLIC
+    IMSRG
+    Parameters
+    PhysicalConstants
+    Version
+    OpenMP::OpenMP_CXX
+)
+
+add_executable(
     imsrg++
     imsrg++.cc
 )
