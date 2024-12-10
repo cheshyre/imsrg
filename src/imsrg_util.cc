@@ -73,6 +73,8 @@ namespace imsrg_util
       else if (opname == "Rso2")          theop =  Rso2_Op(modelspace,modelspace.GetTargetMass(),modelspace.GetTargetZ()) ;
       else if (opname == "Rso2w")         theop =  Rso2w_Op(modelspace,modelspace.GetTargetMass(),modelspace.GetTargetZ()) ;
       else if (opname == "Rm2")           theop =  Rm2_corrected_Op(modelspace,modelspace.GetTargetMass(),modelspace.GetTargetZ()) ;
+      else if (opname == "Rm2b")          theop =  Rm2b_Op(modelspace,modelspace.GetTargetMass(),modelspace.GetTargetZ()) ;
+      else if (opname == "Rm2c")          theop =  Rm2c_Op(modelspace,modelspace.GetTargetMass(),modelspace.GetTargetZ()) ;
       else if (opname == "Rm2lab")        theop =  RSquaredOp(modelspace) ;
       else if (opname == "ISM")           theop =  MultipoleResponseOp(modelspace,2,0,0) ; // Isoscalar monopole (see PRC97(2018)054306 ) --added by bhu
       else if (opname == "IVM")           theop =  MultipoleResponseOp(modelspace,2,0,1) ; // Isovector monopole
@@ -1569,6 +1571,47 @@ Operator R2o_Op(ModelSpace &modelspace, int l, int tz2, int jj) {
   r2.OneBody *= oscillator_b;
   return r2;
 }
+
+/// Point proton radius squared
+/// Returns
+/// \f[ 
+/// R_p^{2} = \frac{1}{Z} \sum_{p}\left(\vec{r}_{p}\right)^2
+/// \f]
+/// evaluated in the oscillator basis.
+ Operator Rm2b_Op(ModelSpace& modelspace, int A, int Z)
+ {
+   if (A==0) return 0.0*KineticEnergy_Op(modelspace);
+   
+  //  Operator ret = R2CM_Op(modelspace);
+  //  ret += (A-2.0)/(A*Z)*R2_1body_Op(modelspace,"proton");
+  //  ret -= 4./(A*Z)*R2_2body_Op(modelspace,"proton");
+  //  ret += 1./Z * RpSpinOrbitCorrection(modelspace);
+   return (1.0 / A) * R2_1body_Op(modelspace, "matter");
+  //  return R2CM_Op(modelspace) + (A-2.0)/(A*Z)*R2_1body_Op(modelspace,"proton")
+  //                                  - 4./(A*Z)*R2_2body_Op(modelspace,"proton")
+  //                                  + 1./Z * RpSpinOrbitCorrection(modelspace);
+ }
+
+
+/// Intrinsic point proton radius squared
+/// Returns
+/// \f[ 
+/// R_p^{2} = \frac{1}{Z} \sum_{p}\left(\vec{r}_{p}-\vec{R}_{CM}\right)^2 =
+/// R^2_{CM} + \frac{A-2}{AZ} \sum_{p}r_{p}^{2} - \frac{4}{AZ}\sum_{i<j}\vec{r}_i\cdot\vec{r}_j  
+/// \f]
+/// evaluated in the oscillator basis.
+ Operator Rm2c_Op(ModelSpace& modelspace, int A, int Z)
+ {
+   if (A==0) return 0.0*KineticEnergy_Op(modelspace);
+   Operator ret = R2CM_Op(modelspace);
+   ret += (A-2.0)/(A*A)*R2_1body_Op(modelspace,"matter");
+   ret -= 4./(A*A)*R2_2body_Op(modelspace,"matter");
+  //  ret += 1./Z * RpSpinOrbitCorrection(modelspace);
+   return ret;
+  //  return R2CM_Op(modelspace) + (A-2.0)/(A*Z)*R2_1body_Op(modelspace,"proton")
+  //                                  - 4./(A*Z)*R2_2body_Op(modelspace,"proton")
+  //                                  + 1./Z * RpSpinOrbitCorrection(modelspace);
+ }
 
 /// Point proton radius squared
 /// Returns

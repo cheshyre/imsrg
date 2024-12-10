@@ -970,6 +970,7 @@ if (opff.file2name != "") {
   // std::cout << " " << __FILE__ << " line " << __LINE__ << "noperators = " << HNO.profiler.counter["N_Operators"] << std::endl;
 
   IMSRGSolver imsrgsolver(HNO);
+  Operator H_unevolved = HNO;
   // std::cout << " " << __FILE__ << " line " << __LINE__ << "noperators = " << HNO.profiler.counter["N_Operators"] << std::endl;
 //  imsrgsolver.SetHin(HNO); // necessary?
   imsrgsolver.SetReadWrite(rw);
@@ -1367,6 +1368,7 @@ if (opff.file2name != "") {
   }
 
 
+  bool eval_r2Hr2 = false;
   if ((method == "magnus") || (method == "magnus_backoff"))
   {
 
@@ -1426,6 +1428,9 @@ if (opff.file2name != "") {
         }
         count_from_file++;
         opname = opff.opname; // Get rid of the _FROMFILE bit.
+      }
+      else if (opname == "r2Hr2") {
+        eval_r2Hr2 = true;
       }
       else
       {
@@ -1624,11 +1629,18 @@ if (opff.file2name != "") {
   }
 
 
+  if (eval_r2Hr2) {
+    Operator r2 = imsrg_util::OperatorFromString(modelspace, "Rm2b");
+    r2 = hf.TransformToHFBasis(r2).DoNormalOrdering();
 
+    Operator Hr2 = Commutator::Commutator(H_unevolved, r2);
+    Operator r2Hr2 = 0.5 * targetMass * targetMass * Commutator::Commutator(r2, Hr2);
 
+    std::cout << "r2Hr2_HF: " << r2Hr2.ZeroBody << std::endl;
 
-
-
+    r2Hr2 = imsrgsolver.Transform(r2Hr2);
+    std::cout << "r2Hr2_IMSRG2: " << r2Hr2.ZeroBody << std::endl;
+  }
 
 
 

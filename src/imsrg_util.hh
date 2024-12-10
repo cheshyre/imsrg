@@ -71,6 +71,8 @@ namespace imsrg_util
  Operator Rn2b_Op(ModelSpace& modelspace, int A, int Z);
  Operator Rp2c_Op(ModelSpace& modelspace, int A, int Z);
  Operator Rn2c_Op(ModelSpace& modelspace, int A, int Z);
+ Operator Rm2b_Op(ModelSpace& modelspace, int A, int Z);
+ Operator Rm2c_Op(ModelSpace& modelspace, int A, int Z);
  Operator Rso2_Op(ModelSpace& modelspace, int A, int Z);
  Operator Rso2w_Op(ModelSpace& modelspace, int A, int Z);
  Operator FMp0_Op(ModelSpace& modelspace, double q);
