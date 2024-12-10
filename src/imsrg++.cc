@@ -1431,6 +1431,7 @@ if (opff.file2name != "") {
       }
       else if (opname == "r2Hr2") {
         eval_r2Hr2 = true;
+        continue;
       }
       else
       {
@@ -1631,8 +1632,24 @@ if (opff.file2name != "") {
 
   if (eval_r2Hr2) {
     Operator r2 = imsrg_util::OperatorFromString(modelspace, "Rm2b");
-    r2 = hf.TransformToHFBasis(r2).DoNormalOrdering();
-
+    if ( basis == "oscillator")
+      {
+        r2 = r2.DoNormalOrdering();
+      }
+      else if ( basis == "HF")
+      {
+        r2 = hf.TransformToHFBasis(r2).DoNormalOrdering();
+      }
+      else if ( basis == "NAT")
+      {
+        r2 = hf.TransformHOToNATBasis(r2).DoNormalOrdering();
+      }
+      if ( (eMax_imsrg != -1) or (e2Max_imsrg != -1) or (e3Max_imsrg) != -1)
+      {
+//     ModelSpace modelspace_imsrg = modelspace;
+        std::cout << "Truncating modelspace for IMSRG calculation: emax e2max e3max  ->  " << eMax_imsrg << " " << e2Max_imsrg << " " << e3Max_imsrg << std::endl;
+        r2 = r2.Truncate(modelspace_imsrg);
+      }
     Operator Hr2 = Commutator::Commutator(H_unevolved, r2);
     Operator r2Hr2 = 0.5 * targetMass * targetMass * Commutator::Commutator(r2, Hr2);
 
