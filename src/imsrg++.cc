@@ -1648,8 +1648,12 @@ if (opff.file2name != "") {
       {
 //     ModelSpace modelspace_imsrg = modelspace;
         std::cout << "Truncating modelspace for IMSRG calculation: emax e2max e3max  ->  " << eMax_imsrg << " " << e2Max_imsrg << " " << e3Max_imsrg << std::endl;
+        // r2.ThreeBody.SwitchToPN_and_discard();
         r2 = r2.Truncate(modelspace_imsrg);
       }
+    if (IMSRG3) {
+      r2.ThreeBody.SwitchToPN_and_discard();
+    }
     Operator Hr2 = Commutator::Commutator(H_unevolved, r2);
     Operator r2Hr2 = 0.5 * targetMass * targetMass * Commutator::Commutator(r2, Hr2);
 
