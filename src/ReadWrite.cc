@@ -14,6 +14,7 @@
 #include <ctime>
 #include <array>
 #include <map>
+#include <tuple>
 #include <vector>
 #include <unordered_map>
 #include "omp.h"
@@ -56,7 +57,327 @@ ReadWrite::ReadWrite()
 {
 }
 
+static int combine_p_and_mm(int p, int mm) {
+  return 10000 * p + mm + 50;
+}
 
+static int convert_jj_and_p_into_l(int jj, int p) {
+  const int l1 = (jj + 1) / 2;
+  const int l2 = (jj - 1) / 2;
+  int l = l1;
+  if (l2 % 2 == p) {
+    l = l2;
+  }
+  return l;
+}
+
+static double GetMschemeMatrixElement_2b(const Operator &Op, int a, int ma,
+                                         int b, int mb, int c, int mc, int d,
+                                         int md) {
+  double matel = 0;
+  int Jop = Op.GetJRank();
+  Orbit &oa = Op.modelspace->GetOrbit(a);
+  Orbit &ob = Op.modelspace->GetOrbit(b);
+  Orbit &oc = Op.modelspace->GetOrbit(c);
+  Orbit &od = Op.modelspace->GetOrbit(d);
+  if ((a == b) && (ma == mb)) {
+    return 0;
+  }
+  if ((c == d) && (mc == md)) {
+    return 0;
+  }
+  if (Jop == 0) {
+    // scalar operator
+    if ((ma + mb) == (mc + md)) {
+      int Jmin = std::max(std::abs(oa.j2 - ob.j2), std::abs(oc.j2 - od.j2)) / 2;
+      int Jmax = std::min(oa.j2 + ob.j2, oc.j2 + od.j2) / 2;
+      int M = (ma + mb) / 2;
+      for (int J = Jmin; J <= Jmax; J++) {
+        // We take the un-normalized TBME (the one with the tilde) so we don't
+        // need to worry about normalization factors.
+        double clebsch_ab =
+            AngMom::CG(0.5 * oa.j2, 0.5 * ma, 0.5 * ob.j2, 0.5 * mb, J, M);
+        double clebsch_cd =
+            AngMom::CG(0.5 * oc.j2, 0.5 * mc, 0.5 * od.j2, 0.5 * md, J, M);
+        matel += clebsch_ab * clebsch_cd * Op.TwoBody.GetTBME_J(J, a, b, c, d);
+      }
+    }
+  } else {
+    std::cout << " WARNING!!! " << __func__
+              << "   not yet implemented for tensor operator " << std::endl;
+    exit(0);
+  }
+
+  return matel;
+}
+
+void ReadWrite::WriteMSchemeMH(std::string filename, Operator& Op) {
+  // Determine channels
+  std::vector<std::tuple<int, int, int, int, int>> channels;
+  const auto emax = Op.modelspace->Emax;
+  int chans_count = 0;
+  for (const auto& p : {0, 1}) {
+    for (const auto& tt : {-1, 1}) {
+      const int rtt = -1 * tt;
+      for (int jj = 1; jj <= 2 * emax + 1; jj += 2) {
+        if ((jj == 2 * emax + 1) && (p != emax % 2)) {
+          continue;
+        }
+        const auto l = convert_jj_and_p_into_l(jj, p);
+        const auto& chan_states = Op.GetOneBodyChannel(l, jj, rtt);
+        if (chan_states.size() > 0) {
+          for (int amm = 1; amm <= jj; amm += 2) {
+            channels.push_back(std::make_tuple(chans_count, p, tt, jj, amm));
+            chans_count += 1;
+          }
+        }
+      }
+    }
+  }
+
+  // Determine states
+  std::vector<std::tuple<int, int, int, int, int, int, int>> states;
+  int states_count = 0;
+  for (const auto& p : Op.modelspace->all_orbits) {
+    auto& orb = Op.modelspace->GetOrbit(p);
+    for (int mm = -1 * orb.j2; mm <= orb.j2; mm += 2) {
+      states.push_back(
+        std::make_tuple(
+          states_count,
+          p,
+          orb.n,
+          orb.l,
+          orb.j2,
+          -1 * orb.tz2,
+          mm));
+      states_count += 1;
+    }
+  }
+
+  // Lookup state index from p, mm
+  std::unordered_map<int, int> pmm_lookup;
+  for (const auto& state : states) {
+    const auto key = combine_p_and_mm(std::get<1>(state), std::get<6>(state));
+    const auto val = std::get<0>(state);
+
+    pmm_lookup[key] = val;
+  }
+
+  std::ofstream of(filename);
+
+  of << "Channels: " << channels.size() << "\n";
+  of << "i_ch    p   tt   jj |mm|\n";
+  for (const auto& ch : channels) {
+    of << std::setw(4) << std::get<0>(ch) << " "
+        << std::setw(4) << std::get<1>(ch) << " "
+        << std::setw(4) << std::get<2>(ch) << " "
+        << std::setw(4) << std::get<3>(ch) << " "
+        << std::setw(4) << std::get<4>(ch) << "\n";
+  }
+  of << "States: " << states.size() << "\n";
+  of << " i_p    n    l   jj   tt   mm\n";
+  for (const auto& ch : states) {
+    of << std::setw(4) << std::get<0>(ch) << " "
+      << std::setw(4) << std::get<2>(ch) << " "
+      << std::setw(4) << std::get<3>(ch) << " "
+      << std::setw(4) << std::get<4>(ch) << " "
+      << std::setw(4) << std::get<5>(ch) << " "
+      << std::setw(4) << std::get<6>(ch) << "\n";
+  }
+  of << "0B Part: " <<  std::setw(14) << Op.ZeroBody << "\n";
+  of << "1B Part:\n";
+  for (const auto& p : states) {
+    const auto ip = std::get<0>(p);
+    const auto ipr = std::get<1>(p);
+    const auto mmp = std::get<6>(p);
+    for (const auto& q : states) {
+      const auto iq = std::get<0>(q);
+      const auto iqr = std::get<1>(q);
+      const auto mmq = std::get<6>(q);
+      if ((mmp == mmq) && (std::abs(Op.OneBody(ipr, iqr)) > 1e-9)) {
+        of << std::setw(4) << ip << " " << std::setw(4) << iq << " " << std::setw(14) << Op.OneBody(ipr, iqr) << "\n";
+      }
+    }
+  }
+  of << "2B Part:\n";
+  for (const auto& ch_pr : channels) {
+    const auto i_ch1 = std::get<0>(ch_pr);
+    const auto p_ch1 = std::get<1>(ch_pr);
+    const auto tt_ch1 = std::get<2>(ch_pr);
+    const auto rtt_ch1 = -1 * tt_ch1;
+    const auto jj_ch1 = std::get<3>(ch_pr);
+    const auto amm_ch1 = std::get<4>(ch_pr);
+    const auto l_ch1 = convert_jj_and_p_into_l(jj_ch1, p_ch1);
+    for (const auto& ch_qs : channels) {
+      const auto i_ch2 = std::get<0>(ch_qs);
+      const auto p_ch2 = std::get<1>(ch_qs);
+      const auto tt_ch2 = std::get<2>(ch_qs);
+      const auto rtt_ch2 = -1 * tt_ch2;
+      const auto jj_ch2 = std::get<3>(ch_qs);
+      const auto amm_ch2 = std::get<4>(ch_qs);
+      const auto l_ch2 = convert_jj_and_p_into_l(jj_ch2, p_ch2);
+
+      bool header_printed = false;
+      // of << "Chan_pqrs(pr=" << i_ch1 << ",qs=" << i_ch2 << ")\n";
+
+      for (const auto& p : Op.GetOneBodyChannel(l_ch1, jj_ch1, rtt_ch1)) {
+        for (const auto& mmp : {-1 * amm_ch1, amm_ch1}) {
+          for (const auto& q : Op.GetOneBodyChannel(l_ch2, jj_ch2, rtt_ch2)) {
+            for (const auto& mmq : {-1 * amm_ch2, amm_ch2}) {
+              for (const auto& r : Op.GetOneBodyChannel(l_ch1, jj_ch1, rtt_ch1)) {
+                for (const auto& mmr : {-1 * amm_ch1, amm_ch1}) {
+                  for (const auto& s : Op.GetOneBodyChannel(l_ch2, jj_ch2, rtt_ch2)) {
+                    for (const auto& mms : {-1 * amm_ch2, amm_ch2}) {
+                      if (mmp + mmq != mmr + mms) {
+                        continue;
+                      }
+                      const double me = GetMschemeMatrixElement_2b(Op, p, mmp, q, mmq, r, mmr, s, mms);
+                      if (std::abs(me) > 1e-9) {
+                        const int ip = pmm_lookup.at(combine_p_and_mm(p, mmp));
+                        const int iq = pmm_lookup.at(combine_p_and_mm(q, mmq));
+                        const int ir = pmm_lookup.at(combine_p_and_mm(r, mmr));
+                        const int is = pmm_lookup.at(combine_p_and_mm(s, mms));
+
+                        if (!header_printed) {
+      of << "Chan_pqrs(pr=" << i_ch1 << ",qs=" << i_ch2 << ")\n";
+      header_printed = true;
+                        }
+
+                        of << std::setw(4) << ip << " "
+                        << std::setw(4) << iq << " "
+                        << std::setw(4) << ir << " "
+                        << std::setw(4) << is << " "
+                        << std::setw(14) << me << "\n";
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void ReadWrite::WriteMSchemeMHFull(std::string filename, Operator &Op) {
+  // Determine channels
+  std::vector<std::tuple<int, int, int, int, int>> channels;
+  const auto emax = Op.modelspace->Emax;
+  int chans_count = 0;
+  for (const auto &p : {0, 1}) {
+    for (const auto &tt : {-1, 1}) {
+      const int rtt = -1 * tt;
+      for (int jj = 1; jj <= 2 * emax + 1; jj += 2) {
+        if ((jj == 2 * emax + 1) && (p != emax % 2)) {
+          continue;
+        }
+        const auto l = convert_jj_and_p_into_l(jj, p);
+        const auto &chan_states = Op.GetOneBodyChannel(l, jj, rtt);
+        if (chan_states.size() > 0) {
+          for (int amm = 1; amm <= jj; amm += 2) {
+            channels.push_back(std::make_tuple(chans_count, p, tt, jj, amm));
+            chans_count += 1;
+          }
+        }
+      }
+    }
+  }
+
+  // Determine states
+  std::vector<std::tuple<int, int, int, int, int, int, int>> states;
+  int states_count = 0;
+  for (const auto &p : Op.modelspace->all_orbits) {
+    auto &orb = Op.modelspace->GetOrbit(p);
+    for (int mm = -1 * orb.j2; mm <= orb.j2; mm += 2) {
+      states.push_back(std::make_tuple(states_count, p, orb.n, orb.l, orb.j2,
+                                       -1 * orb.tz2, mm));
+      states_count += 1;
+    }
+  }
+
+  // Lookup state index from p, mm
+  std::unordered_map<int, int> pmm_lookup;
+  for (const auto &state : states) {
+    const auto key = combine_p_and_mm(std::get<1>(state), std::get<6>(state));
+    const auto val = std::get<0>(state);
+
+    pmm_lookup[key] = val;
+  }
+
+  std::ofstream of(filename);
+
+  of << "Channels: " << channels.size() << "\n";
+  of << "i_ch    p   tt   jj |mm|\n";
+  for (const auto &ch : channels) {
+    of << std::setw(4) << std::get<0>(ch) << " " << std::setw(4)
+       << std::get<1>(ch) << " " << std::setw(4) << std::get<2>(ch) << " "
+       << std::setw(4) << std::get<3>(ch) << " " << std::setw(4)
+       << std::get<4>(ch) << "\n";
+  }
+  of << "States: " << states.size() << "\n";
+  of << " i_p    n    l   jj   tt   mm\n";
+  for (const auto &ch : states) {
+    of << std::setw(4) << std::get<0>(ch) << " " << std::setw(4)
+       << std::get<2>(ch) << " " << std::setw(4) << std::get<3>(ch) << " "
+       << std::setw(4) << std::get<4>(ch) << " " << std::setw(4)
+       << std::get<5>(ch) << " " << std::setw(4) << std::get<6>(ch) << "\n";
+  }
+  of << "0B Part: " << std::setw(14) << Op.ZeroBody << "\n";
+  of << "1B Part:\n";
+  for (const auto &p : states) {
+    const auto ip = std::get<0>(p);
+    const auto ipr = std::get<1>(p);
+    const auto mmp = std::get<6>(p);
+    for (const auto &q : states) {
+      const auto iq = std::get<0>(q);
+      const auto iqr = std::get<1>(q);
+      const auto mmq = std::get<6>(q);
+      if ((mmp == mmq) && (std::abs(Op.OneBody(ipr, iqr)) > 1e-9)) {
+        of << std::setw(4) << ip << " " << std::setw(4) << iq << " "
+           << std::setw(14) << Op.OneBody(ipr, iqr) << "\n";
+      }
+    }
+  }
+  of << "2B Part:\n";
+
+  for (const auto &p : Op.modelspace->all_orbits) {
+    const auto jjp = Op.modelspace->GetOrbit(p).j2;
+    for (int mmp = -1 * jjp; mmp <= jjp; mmp += 2) {
+      for (const auto &q : Op.modelspace->all_orbits) {
+        const auto jjq = Op.modelspace->GetOrbit(q).j2;
+        for (int mmq = -1 * jjq; mmq <= jjq; mmq += 2) {
+          for (const auto &r : Op.modelspace->all_orbits) {
+            const auto jjr = Op.modelspace->GetOrbit(r).j2;
+            for (int mmr = -1 * jjr; mmr <= jjr; mmr += 2) {
+              for (const auto &s : Op.modelspace->all_orbits) {
+                const auto jjs = Op.modelspace->GetOrbit(s).j2;
+                for (int mms = -1 * jjs; mms <= jjs; mms += 2) {
+                  if (mmp + mmq != mmr + mms) {
+                    continue;
+                  }
+                  const double me = GetMschemeMatrixElement_2b(
+                      Op, p, mmp, q, mmq, r, mmr, s, mms);
+                  if (std::abs(me) > 1e-9) {
+                    const int ip = pmm_lookup.at(combine_p_and_mm(p, mmp));
+                    const int iq = pmm_lookup.at(combine_p_and_mm(q, mmq));
+                    const int ir = pmm_lookup.at(combine_p_and_mm(r, mmr));
+                    const int is = pmm_lookup.at(combine_p_and_mm(s, mms));
+
+                    of << std::setw(4) << ip << " " << std::setw(4) << iq << " "
+                       << std::setw(4) << ir << " " << std::setw(4) << is << " "
+                       << std::setw(14) << me << "\n";
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 /// Read two-body matrix elements from an Oslo-formatted file
 void ReadWrite::ReadTBME_Oslo( std::string filename, Operator& Hbare)

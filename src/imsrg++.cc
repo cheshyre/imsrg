@@ -55,8 +55,10 @@
 #include <omp.h>
 #include "Commutator.hh"
 #include "IMSRG.hh"
+#include "Operator.hh"
 #include "Parameters.hh"
 #include "PhysicalConstants.hh"
+#include "imsrg_util.hh"
 #include "version.hh"
 
 struct OpFromFile {
@@ -473,6 +475,14 @@ if (opff.file2name != "") {
 
     std::cout << "done reading 2N" << std::endl;
   }
+
+  // rw.WriteMSchemeMH("../vnn_hw" + std::to_string(static_cast<int>(hw)) + "_e4_mscheme.mmh", Hbare);
+  // rw.WriteMSchemeMHFull("../vnn_mscheme.mmh2", Hbare);
+  // Operator t =  imsrg_util::KineticEnergy_Op(modelspace) / hw;
+  // rw.WriteMSchemeMH( "../t_no_hw_mscheme.mmh",t);
+  // Operator tcm =  imsrg_util::TCM_Op(modelspace) / hw * targetMass;
+  // rw.WriteMSchemeMH( "../tcm_no_hw_no_A_mscheme.mmh",tcm);
+  // exit(0);
 
   // Read in the 3-body file
   if (Hbare.particle_rank >=3)
