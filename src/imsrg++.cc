@@ -658,12 +658,12 @@ if (opff.file2name != "") {
     V3N_TransNO.OneBody *= 0.0;
 
     V3N = hf.TransformFromHFBasis(V3N_TransNO);
-    rw.WriteMSchemeMH("../v3n_hw" + std::to_string(static_cast<int>(hw)) +
+    rw.WriteMSchemeMH("output/v3n_hw" + std::to_string(static_cast<int>(hw)) +
                           "_e" + std::to_string(modelspace.Emax) + "_" +
                           reference + "_mscheme.mmh",
                       V3N);
   }
-  rw.WriteMSchemeMH("../vnn_hw" + std::to_string(static_cast<int>(hw)) + "_e" + std::to_string(modelspace.Emax) + "_mscheme.mmh", VNN);
+  rw.WriteMSchemeMH("output/vnn_hw" + std::to_string(static_cast<int>(hw)) + "_e" + std::to_string(modelspace.Emax) + "_mscheme.mmh", VNN);
   // rw.WriteMSchemeMHFull("../vnn_mscheme.mmh2", Hbare);
   // Operator t =  imsrg_util::KineticEnergy_Op(modelspace) / hw;
   // rw.WriteMSchemeMH( "../t_no_hw_mscheme.mmh",t);
