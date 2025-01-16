@@ -1,6 +1,7 @@
 
 #include "HartreeFock.hh"
 #include "ModelSpace.hh"
+#include "Operator.hh"
 #include "PhysicalConstants.hh"
 #include "AngMom.hh"
 #include <iomanip>
@@ -1023,6 +1024,17 @@ Operator HartreeFock::TransformToHFBasis( Operator& OpHO)
    }
 
    return OpHF;
+}
+
+Operator HartreeFock::TransformFromHFBasis( Operator& OpHF)
+{
+  C = C.t();
+
+  Operator ret_val = TransformToHFBasis(OpHF);
+
+  C = C.t();
+
+  return ret_val;
 }
 
 //**************************************************************************

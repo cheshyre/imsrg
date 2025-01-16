@@ -93,8 +93,10 @@ class HartreeFock
    void SetJacobi3BME( Jacobi3BME* jac ) {jacobi3bme = jac; use_jacobi_3body=true;}; ///< Setter.
    void DiscardNO2Bfrom3N() {discard_NO2B_from_3N = true;};
    Operator TransformToHFBasis( Operator& OpIn); ///< Transform an operator from oscillator basis to HF basis
+   Operator TransformFromHFBasis( Operator& OpIn); ///< Transform an operator from oscillator basis to HF basis
 //   Operator GetNormalOrderedH();  ///< Return the Hamiltonian in the HF basis at the normal-ordered 2body level.
    Operator GetNormalOrderedH(int particle_rank=2);  ///< Return the Hamiltonian in the HF basis at the normal-ordered 2body level.
+   // Operator GetNormalOrderedOp(Operator& opin, int particle_rank=2);  ///< Return the operator in the HF basis at the normal-ordered 2body level.
    Operator GetNormalOrderedH(arma::mat& Cin, int particle_rank=2);  ///< Return the Hamiltonian in the HF basis at the normal-ordered 2body level.
    Operator GetOmega();           ///< Return a generator of the Hartree Fock transformation
    Operator GetHbare(){return Hbare;}; ///< Getter function for Hbare

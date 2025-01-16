@@ -439,6 +439,12 @@ if (opff.file2name != "") {
   int particle_rank = input3bme=="none" ? 2 : 3;
   Operator Hbare = Operator(modelspace,0,0,0,particle_rank);
   Hbare.SetHermitian();
+  Operator VNN = Operator(modelspace,0,0,0,particle_rank);
+  VNN.SetHermitian();
+  Operator V3N = Operator(modelspace,0,0,0,particle_rank);
+  V3N.SetHermitian();
+  Operator Trel = Operator(modelspace,0,0,0,particle_rank);
+  Trel.SetHermitian();
 
 
   Commutator::SetUseGooseTank(goose_tank);
@@ -450,63 +456,58 @@ if (opff.file2name != "") {
   if (inputtbme != "none")
   {
     if (fmt2 == "me2j")
-      rw.ReadBareTBME_Darmstadt(inputtbme, Hbare,file2e1max,file2e2max,file2lmax);
+      rw.ReadBareTBME_Darmstadt(inputtbme, VNN,file2e1max,file2e2max,file2lmax);
     else if (fmt2 == "navratil" or fmt2 == "Navratil")
-      rw.ReadBareTBME_Navratil(inputtbme, Hbare);
+      rw.ReadBareTBME_Navratil(inputtbme, VNN);
     else if (fmt2 == "oslo" )
-      rw.ReadTBME_Oslo(inputtbme, Hbare);
+      rw.ReadTBME_Oslo(inputtbme, VNN);
     else if (fmt2.find("oakridge") != std::string::npos )
     { // input format should be: singleparticle.dat,vnn.dat
       size_t comma_pos = inputtbme.find_first_of(",");
       if ( fmt2.find("bin") != std::string::npos )
-        rw.ReadTBME_OakRidge( inputtbme.substr(0,comma_pos),  inputtbme.substr( comma_pos+1 ), Hbare, "binary");
+        rw.ReadTBME_OakRidge( inputtbme.substr(0,comma_pos),  inputtbme.substr( comma_pos+1 ), VNN, "binary");
       else
-        rw.ReadTBME_OakRidge( inputtbme.substr(0,comma_pos),  inputtbme.substr( comma_pos+1 ), Hbare, "ascii");
+        rw.ReadTBME_OakRidge( inputtbme.substr(0,comma_pos),  inputtbme.substr( comma_pos+1 ), VNN, "ascii");
     }
     else if (fmt2 == "takayuki" )
-      rw.ReadTwoBody_Takayuki( inputtbme, Hbare);
+      rw.ReadTwoBody_Takayuki( inputtbme, VNN);
     else if (fmt2 == "nushellx" )
-      rw.ReadNuShellX_int( Hbare, inputtbme );
+      rw.ReadNuShellX_int( VNN, inputtbme );
     else if (fmt2 == "schematic" )
     {
       std::cout << "using schematic potential " << inputtbme << std::endl;
-      if ( inputtbme == "Minnesota") Hbare += imsrg_util::MinnesotaPotential( modelspace );
+      if ( inputtbme == "Minnesota") VNN += imsrg_util::MinnesotaPotential( modelspace );
     }
 
+    Hbare += VNN;
     std::cout << "done reading 2N" << std::endl;
   }
-
-  // rw.WriteMSchemeMH("../vnn_hw" + std::to_string(static_cast<int>(hw)) + "_e4_mscheme.mmh", Hbare);
-  // rw.WriteMSchemeMHFull("../vnn_mscheme.mmh2", Hbare);
-  // Operator t =  imsrg_util::KineticEnergy_Op(modelspace) / hw;
-  // rw.WriteMSchemeMH( "../t_no_hw_mscheme.mmh",t);
-  // Operator tcm =  imsrg_util::TCM_Op(modelspace) / hw * targetMass;
-  // rw.WriteMSchemeMH( "../tcm_no_hw_no_A_mscheme.mmh",tcm);
-  // exit(0);
 
   // Read in the 3-body file
   if (Hbare.particle_rank >=3)
   {
     if(input3bme_type == "full")
     {
-      rw.Read_Darmstadt_3body(input3bme, Hbare, file3e1max,file3e2max,file3e3max);
+      rw.Read_Darmstadt_3body(input3bme, V3N, file3e1max,file3e2max,file3e3max);
     }
     if(input3bme_type == "no2b")
     {
 
-      Hbare.ThreeBody.SetMode("no2b");
-      if (no2b_precision == "half")  Hbare.ThreeBody.SetMode("no2bhalf");
+      V3N.ThreeBody.SetMode("no2b");
+      if (no2b_precision == "half")  V3N.ThreeBody.SetMode("no2bhalf");
 
-      Hbare.ThreeBody.ReadFile( {input3bme}, {file3e1max, file3e2max, file3e3max, file3e1max} );
+      V3N.ThreeBody.ReadFile( {input3bme}, {file3e1max, file3e2max, file3e3max, file3e1max} );
       rw.File3N = input3bme;
 
     }
     else if(input3bme_type == "mono")
     {
-      Hbare.ThreeBody.SetMode("mono");
-      Hbare.ThreeBody.ReadFile( {input3bme}, {file3e1max, file3e2max, file3e3max, file3e1max} );
+      V3N.ThreeBody.SetMode("mono");
+      V3N.ThreeBody.ReadFile( {input3bme}, {file3e1max, file3e2max, file3e3max, file3e1max} );
       rw.File3N = input3bme;
     }
+
+    Hbare += V3N;
     std::cout << "done reading 3N" << std::endl;
   }
 
@@ -532,7 +533,8 @@ if (opff.file2name != "") {
 
   if (fmt2 != "nushellx" and physical_system != "atomic" and hw_trap < 0)  // Don't need to add kinetic energy if we read a shell model interaction
   {
-    Hbare += imsrg_util::Trel_Op(modelspace);
+    Trel = imsrg_util::Trel_Op(modelspace);
+    Hbare += Trel;
     if (Hbare.OneBody.has_nan())
     {
        std::cout << "  Looks like the Trel op is hosed from the get go. Dying." << std::endl;
@@ -637,6 +639,37 @@ if (opff.file2name != "") {
   {
     HNO = Hbare.DoNormalOrdering();
   }
+
+  V3N *= 0.0;
+  if (input3bme != "none") {
+    VNN.SetNumberLegs(4);
+    VNN.SetParticleRank(2);
+    Trel.SetNumberLegs(4);
+    Trel.SetParticleRank(2);
+    Operator VNN_Trans = hf.TransformToHFBasis(VNN);
+    Operator Trel_Trans = hf.TransformToHFBasis(Trel);
+    Operator V3N_TransNO = HNO;
+    V3N_TransNO.SetNumberLegs(4);
+    V3N_TransNO.SetParticleRank(2);
+
+    V3N_TransNO -= VNN_Trans;
+    V3N_TransNO -= Trel_Trans;
+    V3N_TransNO.ZeroBody *= 0.0;
+    V3N_TransNO.OneBody *= 0.0;
+
+    V3N = hf.TransformFromHFBasis(V3N_TransNO);
+    rw.WriteMSchemeMH("../v3n_hw" + std::to_string(static_cast<int>(hw)) +
+                          "_e" + std::to_string(modelspace.Emax) + "_" +
+                          reference + "_mscheme.mmh",
+                      V3N);
+  }
+  rw.WriteMSchemeMH("../vnn_hw" + std::to_string(static_cast<int>(hw)) + "_e" + std::to_string(modelspace.Emax) + "_mscheme.mmh", VNN);
+  // rw.WriteMSchemeMHFull("../vnn_mscheme.mmh2", Hbare);
+  // Operator t =  imsrg_util::KineticEnergy_Op(modelspace) / hw;
+  // rw.WriteMSchemeMH( "../t_no_hw_mscheme.mmh",t);
+  // Operator tcm =  imsrg_util::TCM_Op(modelspace) / hw * targetMass;
+  // rw.WriteMSchemeMH( "../tcm_no_hw_no_A_mscheme.mmh",tcm);
+  exit(0);
 
   if (perturbative_triples)
   {
