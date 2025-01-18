@@ -44,6 +44,7 @@
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ///////////////////////////////////////////////////////////////////////////////////
 
+#include <mpi.h>
 
 #include <stdlib.h>
 #include <iostream>
@@ -71,6 +72,12 @@ int main(int argc, char** argv)
   // Default parameters, and everything passed by command line args.
   std::cout << "######  imsrg++ build version: " << version::BuildVersion() << std::endl;
 
+  int world_size = 1;
+  int my_rank = 0;
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
   Parameters parameters(argc,argv);
   if (parameters.help_mode) return 0;
 
@@ -83,8 +90,8 @@ int main(int argc, char** argv)
   std::string custom_valence_space = parameters.s("custom_valence_space");
   std::string basis = parameters.s("basis");
   std::string method = parameters.s("method");
-  std::string flowfile = parameters.s("flowfile");
-  std::string intfile = parameters.s("intfile");
+  std::string flowfile = parameters.s("flowfile") + "_Rank" + std::to_string(my_rank);
+  std::string intfile = parameters.s("intfile") + "_Rank" + std::to_string(my_rank);
   std::string core_generator = parameters.s("core_generator");
   std::string valence_generator = parameters.s("valence_generator");
   std::string fmt2 = parameters.s("fmt2");
@@ -1684,7 +1691,7 @@ if (opff.file2name != "") {
     for (int i=0; i < imsrgsolver.GetNOmegaWritten() ; i++)
     {
        std::ostringstream inputfile,outputfile;
-       inputfile << scratch << "/OMEGA_" << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << i;
+       inputfile << scratch << "/OMEGA_" << std::setw(5) << std::setfill('0') << my_rank << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << i;
        outputfile << intfile << "_Omega_" << i;
        // rw.CopyFile( inputfile.str(), outputfile.str() );
     }
@@ -1752,6 +1759,8 @@ if (opff.file2name != "") {
     // std::cout << "Norm of 3-body = " << imsrgsolver.GetH_s().ThreeBodyNorm() << std::endl;
   }
   Hbare.PrintTimes();
+
+  MPI_Barrier(MPI_COMM_WORLD);
 
   return 0;
 }

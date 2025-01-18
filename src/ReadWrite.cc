@@ -1,3 +1,5 @@
+#include <mpi.h>
+
 #include "ReadWrite.hh"
 #include "ModelSpace.hh"
 #include "AngMom.hh"
@@ -6326,7 +6328,9 @@ void ReadWrite::CopyFile(std::string filename1, std::string filename2)
 //  for (int i = 0; i < size; i++)
 //  {
 //    std::ostringstream inputfile;
-//    inputfile << scratch.c_str() << "/OMEGA_" << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << i;
+      // int my_rank = 1;
+      // MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+//    inputfile << scratch.c_str() << "/OMEGA_" << std::setw(5) << std::setfill('0') << my_rank << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << i;
 //    std::ostringstream outputfile;
 //    outputfile << filename<<"_Omega_"<<i;
 //    std::ifstream f1 (inputfile.str(), std::fstream::binary);

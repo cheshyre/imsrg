@@ -23,9 +23,11 @@ project(imsrg++ VERSION 0.1.0)
 
 find_package(OpenMP REQUIRED)
 find_package(BLAS REQUIRED)
+find_package(MPI REQUIRED)
 find_package(GSL REQUIRED)
 find_package(Boost REQUIRED)
 find_package(ZLIB REQUIRED)
+message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
 
 
 set(CMAKE_CXX_STANDARD 14)
@@ -277,6 +279,7 @@ target_link_libraries(
     ThreeBodyME
     PRIVATE
     OpenMP::OpenMP_CXX
+    MPI::MPI_CXX
     IMSRGBoostZip
     AngMom
     PhysicalConstants
@@ -297,6 +300,7 @@ target_link_libraries(
     PRIVATE
     Commutator
     Boost::boost
+    MPI::MPI_CXX
 )
 
 add_library(
@@ -579,6 +583,7 @@ target_link_libraries(
     PhysicalConstants
     Version
     OpenMP::OpenMP_CXX
+    MPI::MPI_CXX
 )
 
 add_executable(
@@ -593,6 +598,7 @@ target_link_libraries(
     PhysicalConstants
     Version
     OpenMP::OpenMP_CXX
+    MPI::MPI_CXX
 )
 
 add_executable(
