@@ -313,7 +313,7 @@ if (opff.file2name != "") {
     }
     else if ( scratch != "" )
     {
-      std::string testfilename = scratch + "/_this_is_a_test_delete_me";
+      std::string testfilename = scratch + "/_this_is_a_test_delete_me_" + std::to_string(my_rank);
       std::ofstream testout(testfilename);
       testout << "PASSED" << std::endl;
       testout.close();
