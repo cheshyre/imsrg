@@ -1403,6 +1403,9 @@ if (opff.file2name != "") {
 
     for (size_t i=0;i<opnames.size();++i)
     {
+      if (i % world_size != my_rank) {
+        continue;
+      }
       auto opname = opnames[i];
       std::cout << i << ": " << opname << " " << std::endl;
 
