@@ -1,0 +1,4 @@
+CompileFlags:
+    Add:
+        - "--include-directory=./armadillo"
+        - "--include-directory=./half/include"
