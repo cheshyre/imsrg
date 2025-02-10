@@ -1026,6 +1026,25 @@ void ReadWrite::ReadBareTBME_Darmstadt( std::string filename, Operator& Hbare, i
 }
 
 
+/// As for ReadBareTBME_Darmstadt but for modified me2j_np format
+/// At the moment this just is implemented for gzipped files
+void ReadWrite::ReadBareTBME_np_Darmstadt( std::string filename, Operator& Hbare, int emax, int Emax, int lmax)
+{
+
+  File2N = filename;
+  Aref = Hbare.GetModelSpace()->GetAref();
+  Zref = Hbare.GetModelSpace()->GetZref();
+  if ( filename.substr( filename.find_last_of(".")) == ".gz")
+  {
+    std::ifstream infile(filename, std::ios_base::in | std::ios_base::binary);
+    boost::iostreams::filtering_istream zipstream;
+    zipstream.push(boost::iostreams::gzip_decompressor());
+    zipstream.push(infile);
+    ReadBareTBME_np_Darmstadt_from_stream(zipstream, Hbare,  emax, Emax, lmax);
+  }
+}
+
+
 /// Decide the file format from the extension -- .me3j (Darmstadt group format, human-readable), .gz (gzipped me3j, less storage),
 /// .bin (me3j converted to binary, faster to read), .h5 (HDF5 format). Default is to assume .me3j.
 /// For the first three, the file is converted to a stream and sent to ReadDarmstadt_3body_from_stream().
@@ -1248,6 +1267,143 @@ void ReadWrite::ReadBareTBME_Darmstadt_from_stream( T& infile, Operator& Hbare, 
     }
   }
   std::cout << "Read " << nreads*4 << " matrix elements " << std::endl;
+
+}
+
+
+// Read TBME from a modified "me2j alike" format me2j_np without the isospin coupling
+// as for me2j it just contains the matrix elements and the corresponding quantum numbers are inferred.
+// However we have to use 6 matrix elements per (abcd) combination in contrast to 4 me for the usuale me2j files
+// The matrixelements are in the order
+// <ab|V|cd>_{npnp}, <ab|V|cd>_{pnpn}, <ab|V|cd>_{nnnn}, <ab|V|cd>_{pnnp}, <ab|V|cd>_{nppn}, <ab|V|cd>_{pppp}
+// (in contrast to the (T,Tz) ordering of (0,0), (1,1), (1,0), (1,-1) of the original me2j files)
+// The nnnn and pppp matrix elements should stay invariant
+// As the me2j also these matrix elements are unnormalized!
+template<class T>
+void ReadWrite::ReadBareTBME_np_Darmstadt_from_stream( T& infile, Operator& Hbare, int emax, int Emax, int lmax)
+{
+  if ( !infile.good() )
+  {
+     std::cerr << "************************************" << std::endl
+          << "**    Trouble reading file  !!!   **" << std::endl
+          << "************************************" << std::endl;
+     goodstate = false;
+     return;
+  }
+  ModelSpace * modelspace = Hbare.GetModelSpace();
+  int norb = modelspace->GetNumberOrbits();
+  std::vector<int> orbits_remap;
+
+  if (emax < 0)  emax = modelspace->Emax;
+  if (lmax < 0)  lmax = emax;
+
+  for (int e=0; e<=std::min(emax,modelspace->Emax); ++e)
+  {
+    int lmin = e%2;
+    for (int l=lmin; l<=std::min(e,lmax); l+=2)
+    {
+      int n = (e-l)/2;
+      int twojMin = std::abs(2*l-1);
+      int twojMax = 2*l+1;
+      for (int twoj=twojMin; twoj<=twojMax; twoj+=2)
+      {
+         orbits_remap.push_back( modelspace->GetOrbitIndex(n,l,twoj,-1) );
+      }
+    }
+  }
+  int nljmax = orbits_remap.size()-1;
+
+  // The 6 matrix elements we read in for every a,b,c,d
+  double tbme_pp,tbme_nn,tbme_npnp,tbme_pnpn,tbme_pnnp,tbme_nppn;
+  // skip the first line
+  char line[LINESIZE];
+  infile.getline(line,LINESIZE);
+
+  for(int nlj1=0; nlj1<=nljmax; ++nlj1)
+  {
+    int a =  orbits_remap[nlj1];
+    Orbit & o1 = modelspace->GetOrbit(a);
+    int e1 = 2*o1.n + o1.l;
+    if (e1 > modelspace->Emax) break;
+
+    for(int nlj2=0; nlj2<=nlj1; ++nlj2)
+    {
+      int b =  orbits_remap[nlj2];
+      Orbit & o2 = modelspace->GetOrbit(b);
+      int e2 = 2*o2.n + o2.l;
+      if (e1+e2 > Emax) break;
+      int parity = (o1.l + o2.l) % 2;
+
+      for(int nlj3=0; nlj3<=nlj1; ++nlj3)
+      {
+        int c =  orbits_remap[nlj3];
+        Orbit & o3 = modelspace->GetOrbit(c);
+        int e3 = 2*o3.n + o3.l;
+
+        for(int nlj4=0; nlj4<=(nlj3==nlj1 ? nlj2 : nlj3); ++nlj4)
+        {
+          int d =  orbits_remap[nlj4];
+          Orbit & o4 = modelspace->GetOrbit(d);
+          int e4 = 2*o4.n + o4.l;
+          if (e3+e4 > Emax) break;
+          if ( (o1.l + o2.l + o3.l + o4.l)%2 != 0) continue;
+          int Jmin = std::max( std::abs(o1.j2 - o2.j2), std::abs(o3.j2 - o4.j2) )/2;
+          int Jmax = std::min (o1.j2 + o2.j2, o3.j2+o4.j2)/2;
+          if (Jmin > Jmax) continue;
+          for (int J=Jmin; J<=Jmax; ++J)
+          {
+
+             // File is read here.
+             // Matrix elements are written in the file in ordering npnp, pnpn, nnnn, pnnp, nppn, pppp
+             infile >> tbme_npnp >> tbme_pnpn >> tbme_nn >> tbme_pnnp >> tbme_nppn  >> tbme_pp;
+
+             if (a>=norb or b>=norb or c>=norb or d>=norb) continue;
+             // Normalization. The TBMEs are read in un-normalized.
+             double norm_factor = 1;
+             if (a==b)  norm_factor /= PhysConst::SQRT2;
+             if (c==d)  norm_factor /= PhysConst::SQRT2;
+
+             if (norm_factor>0.9 or J%2==0)
+             {
+                 Hbare.TwoBody.SetTBME(J,parity,-1,a,b,c,d,tbme_pp*norm_factor);
+                 Hbare.TwoBody.SetTBME(J,parity,1,a+1,b+1,c+1,d+1,tbme_nn*norm_factor);
+             }
+
+            // define phaes for permutations
+            int phase_ab = 1;
+            if (((o1.j2 + o2.j2) / 2 - J ) % 2 == 1) {
+              phase_ab = -1;
+            }
+            int phase_cd = 1;
+            if (((o3.j2 + o4.j2) / 2 - J ) % 2 == 1) {
+              phase_cd = -1;
+            }
+            // Generate permutations for npnp/pnpn
+            Hbare.TwoBody.SetTBME(J,parity,0,a+1,b,c+1,d,tbme_npnp);
+            Hbare.TwoBody.SetTBME(J,parity,0,a+1,b,d,c+1,tbme_npnp*phase_cd);
+            Hbare.TwoBody.SetTBME(J,parity,0,b,a+1,c+1,d,tbme_npnp*phase_ab);
+            Hbare.TwoBody.SetTBME(J,parity,0,b,a+1,d,c+1,tbme_npnp*phase_ab*phase_cd);
+
+            Hbare.TwoBody.SetTBME(J,parity,0,a,b+1,c,d+1,tbme_pnpn);
+            Hbare.TwoBody.SetTBME(J,parity,0,a,b+1,d+1,c,tbme_pnpn*phase_cd);
+            Hbare.TwoBody.SetTBME(J,parity,0,b+1,a,c,d+1,tbme_pnpn*phase_ab);
+            Hbare.TwoBody.SetTBME(J,parity,0,b+1,a,d+1,c,tbme_pnpn*phase_ab*phase_cd);
+
+            // Generate permutations for pnnp/nppn
+            Hbare.TwoBody.SetTBME(J,parity,0,a,b+1,c+1,d,tbme_pnnp);
+            Hbare.TwoBody.SetTBME(J,parity,0,a,b+1,d,c+1,tbme_pnnp*phase_cd);
+            Hbare.TwoBody.SetTBME(J,parity,0,b+1,a,c+1,d,tbme_pnnp*phase_ab);
+            Hbare.TwoBody.SetTBME(J,parity,0,b+1,a,d,c+1,tbme_pnnp*phase_ab*phase_cd);
+
+            Hbare.TwoBody.SetTBME(J,parity,0,a+1,b,c,d+1,tbme_nppn);
+            Hbare.TwoBody.SetTBME(J,parity,0,a+1,b,d+1,c,tbme_nppn*phase_ab);
+            Hbare.TwoBody.SetTBME(J,parity,0,b,a+1,c,d+1,tbme_nppn*phase_cd);
+            Hbare.TwoBody.SetTBME(J,parity,0,b,a+1,d+1,c,tbme_nppn*phase_ab*phase_cd);
+          }
+        }
+      }
+    }
+  }
 
 }
 
