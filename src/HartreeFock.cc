@@ -1025,6 +1025,14 @@ Operator HartreeFock::TransformToHFBasis( Operator& OpHO)
    return OpHF;
 }
 
+Operator HartreeFock::TransformFromHFBasis( Operator& OpHF)
+{
+  C = C.t();
+  Operator ret_val = TransformToHFBasis(OpHF);
+  C = C.t();
+  return ret_val;
+}
+
 //**************************************************************************
 /// If the lowest orbits are different from our previous guess, we should update the reference.
 //**************************************************************************
