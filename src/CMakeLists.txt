@@ -602,6 +602,21 @@ target_link_libraries(
 )
 
 add_executable(
+    imsrg++_mf
+    imsrg++_mf.cc
+)
+target_link_libraries(
+    imsrg++_mf
+    PUBLIC
+    IMSRG
+    Parameters
+    PhysicalConstants
+    Version
+    OpenMP::OpenMP_CXX
+    MPI::MPI_CXX
+)
+
+add_executable(
     unit_test
     unit_test.cc
 )
