@@ -48,6 +48,7 @@ class ReadWrite
    void ReadBareTBME_np_Darmstadt( std::string filename, Operator& Hbare, int E1max, int E2max, int lmax);
    template<class T> void ReadBareTBME_Darmstadt_from_stream( T & infile, Operator& Hbare, int E1max, int E2max, int lmax);
    template<class T> void ReadBareTBME_np_Darmstadt_from_stream( T & infile, Operator& Hbare, int E1max, int E2max, int lmax);
+   void WriteOakRidgeFull(std::string name_sp, std::string name_no0b, std::string name_no1b, std::string name_no2b, Operator& op, std::string tbme_format);
    void Read_Darmstadt_3body( std::string filename, Operator& Hbare, int E1max, int E2max, int E3max);
    size_t Count_Darmstadt_3body_to_read( Operator& Hbare, int E1max, int E2max, int E3max, std::vector<int>& orbits_remap, std::vector<size_t>& nread_list);
    template<class T>void Read_Darmstadt_3body_from_stream( T & infile, Operator& Hbare, int E1max, int E2max, int E3max);

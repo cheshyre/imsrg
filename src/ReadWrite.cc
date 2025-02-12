@@ -1044,6 +1044,106 @@ void ReadWrite::ReadBareTBME_np_Darmstadt( std::string filename, Operator& Hbare
   }
 }
 
+void ReadWrite::WriteOakRidgeFull(std::string name_sp, std::string name_no0b, std::string name_no1b, std::string name_no2b, Operator& op, std::string tbme_format)
+{
+  std::unordered_map<int,int> orbits_remap;
+  int wint = 4; // width for printing integers
+  int wdouble = 20; // width for printing doubles
+  int pdouble = 8; // precision for printing doubles
+
+  ModelSpace * modelspace = op.GetModelSpace();
+  int Aref = modelspace->GetAref();
+  int norb = modelspace->GetNumberOrbits();
+
+  std::ifstream file_sp(name_sp);
+  if (!file_sp.good() )
+  {
+    std::cerr << "************************************" << std::endl
+              << "**   Using default orbits since   **" << std::endl
+              << "**   there is no file:  **" << name_sp << std::endl
+              << "************************************" << std::endl;
+  }
+  else
+  {
+    double hw_file, spe, dummy;
+    int index, n, l, j2, tz2;
+    file_sp >> hw_file;
+    while( file_sp >> index >> n >> l >> j2 >> tz2 >> spe >> dummy )
+    {
+      index_t orbit_index = modelspace->GetOrbitIndex(n,l,j2,tz2);
+      if(orbit_index >= norb) continue;
+      orbits_remap[orbit_index] = index;
+    }
+  }
+  file_sp.close();
+
+  std::ofstream file_no0b(name_no0b);
+  file_no0b << op.ZeroBody << std::endl;
+  file_no0b.close();
+
+  std::ofstream file_no1b(name_no1b);
+  for (size_t a=0; a<modelspace->GetNumberOrbits(); ++a ) {
+    for (size_t b=0; b<modelspace->GetNumberOrbits(); ++b ) {
+      // if(a < b) continue;
+      double obme = op.OneBody(a,b);
+      int aa = orbits_remap[a];
+      int bb = orbits_remap[b];
+      file_no1b << std::setw(wint) << aa << std::setw(wint) << bb
+        << std::setw(wdouble) << std::setiosflags(std::ios::fixed) << std::setprecision(pdouble) << obme
+        << std::endl;
+    }
+  }
+  file_no1b.close();
+
+  std::vector<int32_t> vint(7);
+  std::vector<double> vdouble(1);
+  int nchan = modelspace->GetNumberTwoBodyChannels();
+  auto openmode = std::ios::out;
+  if (tbme_format=="binary") openmode |= std::ios::binary;
+  std::ofstream file_no2b(name_no2b, openmode);
+  for (int ch=0; ch<nchan; ++ch) {
+    TwoBodyChannel tbc = modelspace->GetTwoBodyChannel(ch);
+    for (size_t ibra=0; ibra<tbc.GetNumberKets(); ++ibra ) {
+      Ket &bra = tbc.GetKet(ibra);
+      int a = bra.p;
+      int b = bra.q;
+      for (size_t iket=0; iket<tbc.GetNumberKets(); ++iket ) {
+        Ket &ket = tbc.GetKet(iket);
+        int c = ket.p;
+        int d = ket.q;
+        if (iket < ibra) continue;
+        // double tbme = op.TwoBody.GetTBME_norm(ch,a,b,c,d);
+        double tbme = op.TwoBody.GetTBME(ch,a,b,c,d);
+        vint[0] = tbc.Tz;
+        vint[1] = tbc.parity;
+        //vint[2] = tbc.J*2;
+        vint[2] = tbc.J;
+        vint[3] = orbits_remap[a];
+        vint[4] = orbits_remap[b];
+        vint[5] = orbits_remap[c];
+        vint[6] = orbits_remap[d];
+        vdouble[0] = tbme;
+        if (tbme_format=="binary")
+        {
+          file_no2b.write( reinterpret_cast<char*>(vint.data()), vint.size()*sizeof(int32_t) );
+          file_no2b.write( reinterpret_cast<char*>(vdouble.data()), vdouble.size()*sizeof(int64_t) );
+        }
+        else
+        {
+          file_no2b << std::setw(wint) << vint[0] << std::setw(wint) << vint[1] 
+            << std::setw(wint) << vint[2] 
+            << std::setw(wint) << vint[3] << std::setw(wint) << vint[4]
+            << std::setw(wint) << vint[5] << std::setw(wint) << vint[6]
+            << std::setw(wdouble) << std::setiosflags(std::ios::fixed) << std::setprecision(pdouble) << vdouble[0]
+            << std::endl;
+        }
+      }
+    }
+  }
+  file_no2b.close();
+
+}
+
 
 /// Decide the file format from the extension -- .me3j (Darmstadt group format, human-readable), .gz (gzipped me3j, less storage),
 /// .bin (me3j converted to binary, faster to read), .h5 (HDF5 format). Default is to assume .me3j.
