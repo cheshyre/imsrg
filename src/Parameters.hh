@@ -112,6 +112,10 @@ std::map<std::string,std::string> Parameters::string_par = {
   {"denominator_partitioning",  "Epstein_Nesbet"}, // Denominators used in IMSRG generators. Can be Moller_Plesset or Epstein_Nesbet.
   {"use_HF_reference_in_NAT",   "false"},       // Use HF reference state after constructing NAT, virtual orbitals will still approximately be NAT
   {"use_HF_valence_in_NAT",   "false"},       // Use HF valence states after constructing NAT, virtual orbitals will still approximately be NAT (does nothing if no use_HF_reference_in_NAT)
+  {"spb_file", "none"},                         // SP basis file for use with the ORNL format
+  {"name_prefix", "default"},                   // prefix for output files (default = NO2B_3BME_{system}_hw_{hw}_e_{emax}_E3_{e3max})
+  {"2bme_output_type", "not_binary"},           // either binary or not_binary
+  {"2bmeNO2B", "none"},                         // input Jacobi NO2B matrix elements if available
 };
 
 
@@ -159,6 +163,7 @@ std::map<std::string,int> Parameters::int_par = {
   {"e3max_imsrg",       -1}, // e3max for imsrg part. defaults to min(e3max,3*emax_imsrg)
   {"emax_3body_imsrg",        -1}, // emax truncation for the 3-body operators in the imsrg part (default: emax_imsrg)
   {"imsrg3_commutator_depth",        100}, // Max number of nest commutators to evaluate at IMSRG(3) level
+  {"JacNO2B_Jtotmax", 99999}, // Max value of jtot for Jacobi NO2B (used to test convergence).
 };
 
 std::map<std::string,std::vector<std::string>> Parameters::vec_par = {

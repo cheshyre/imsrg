@@ -668,6 +668,18 @@ if (opff.file2name != "") {
     Operator V3N_Trans = V3N_TransNO.UndoNormalOrdering();
 
     V3N = hf.TransformFromHFBasis(V3N_Trans);
+
+    std::string name_prefix = parameters.s("name_prefix");
+    if (name_prefix == "default") {
+      name_prefix = "NO2B_3BME_" + reference + "_hw_" + std::to_string(hw) + "_e_" + std::to_string(eMax) + "_E3_" + std::to_string(E3max);
+    }
+
+    if (parameters.s("2bme_output_type") == "binary") {
+      rw.WriteOakRidgeFull(parameters.s("spb_file"), name_prefix + "_0b.ornlme", name_prefix + "_1b.ornlme", name_prefix + "2b.ornlme.bin", V3N, "binary");
+    } else {
+      rw.WriteOakRidgeFull(parameters.s("spb_file"), name_prefix + "_0b.ornlme", name_prefix + "_1b.ornlme", name_prefix + "2b.ornlme", V3N, "not_binary");
+    }
+
   }
 
   Hbare.PrintTimes();
