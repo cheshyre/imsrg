@@ -595,6 +595,7 @@ if (opff.file2name != "") {
   if (basis!="oscillator")
   {
     hf.Solve();
+    std::cout << "HF is solved! Rejoice!" << std::endl;
   }
 
   // decide what to keep after normal ordering
@@ -606,8 +607,10 @@ if (opff.file2name != "") {
   Operator& HNO = Hbare; // The reference & means we overwrite Hbare and save some memory
   if (basis == "HF" and method !="HF")
   {
+    std::cout << "Normal ordering H!" << std::endl;
     HNO = hf.GetNormalOrderedH( hno_particle_rank );
     if ((IMSRG3 or perturbative_triples) and OccNat3Cut>0 ) hf.GetNaturalOrbitals();
+    std::cout << "H is normal ordered! Rejoice!" << std::endl;
   }
   else if (basis == "NAT") // we want to use the natural orbital basis
   {
@@ -650,23 +653,30 @@ if (opff.file2name != "") {
     HNO = Hbare.DoNormalOrdering();
   }
 
+  std::cout << "Clearing V3N!" << std::endl;
   V3N *= 0.0;
   if (input3bme != "none") {
+    std::cout << "Handling input 3BME!" << std::endl;
     VNN.SetNumberLegs(4);
     VNN.SetParticleRank(2);
     Trel.SetNumberLegs(4);
     Trel.SetParticleRank(2);
+    std::cout << "Transforming Trel and VNN to HF!" << std::endl;
     Operator VNN_Trans = hf.TransformToHFBasis(VNN);
     Operator Trel_Trans = hf.TransformToHFBasis(Trel);
+    std::cout << "Extracting V3N from HNO in HF!" << std::endl;
     Operator V3N_TransNO = HNO;
     V3N_TransNO.SetNumberLegs(4);
     V3N_TransNO.SetParticleRank(2);
 
+    std::cout << "Removing VNN and Trel in HF!" << std::endl;
     V3N_TransNO -= VNN_Trans;
     V3N_TransNO -= Trel_Trans;
 
+    std::cout << "Undoing normal ordering in HF!" << std::endl;
     Operator V3N_Trans = V3N_TransNO.UndoNormalOrdering();
 
+    std::cout << "Transforming V3N from HF to HO!" << std::endl;
     V3N = hf.TransformFromHFBasis(V3N_Trans);
 
     std::string name_prefix = parameters.s("name_prefix");
@@ -674,6 +684,7 @@ if (opff.file2name != "") {
       name_prefix = "NO2B_3BME_" + reference + "_hw_" + std::to_string(hw) + "_e_" + std::to_string(eMax) + "_E3_" + std::to_string(E3max);
     }
 
+    std::cout << "Writing to file " << name_prefix << "_xb.ornlme !" <<  std::endl;
     if (parameters.s("2bme_output_type") == "binary") {
       rw.WriteOakRidgeFull(parameters.s("spb_file"), name_prefix + "_0b.ornlme", name_prefix + "_1b.ornlme", name_prefix + "2b.ornlme.bin", V3N, "binary");
     } else {
