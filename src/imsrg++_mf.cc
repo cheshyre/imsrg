@@ -686,9 +686,9 @@ if (opff.file2name != "") {
 
     std::cout << "Writing to file " << name_prefix << "_xb.ornlme !" <<  std::endl;
     if (parameters.s("2bme_output_type") == "binary") {
-      rw.WriteOakRidgeFull(parameters.s("spb_file"), name_prefix + "_0b.ornlme", name_prefix + "_1b.ornlme", name_prefix + "2b.ornlme.bin", V3N, "binary");
+      rw.WriteOakRidgeFull(parameters.s("spb_file"), name_prefix + "_0b.ornlme", name_prefix + "_1b.ornlme", name_prefix + "_2b.ornlme.bin", V3N, "binary");
     } else {
-      rw.WriteOakRidgeFull(parameters.s("spb_file"), name_prefix + "_0b.ornlme", name_prefix + "_1b.ornlme", name_prefix + "2b.ornlme", V3N, "not_binary");
+      rw.WriteOakRidgeFull(parameters.s("spb_file"), name_prefix + "_0b.ornlme", name_prefix + "_1b.ornlme", name_prefix + "_2b.ornlme", V3N, "not_binary");
     }
 
   }
