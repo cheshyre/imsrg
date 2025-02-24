@@ -82,6 +82,7 @@ int main(int argc, char** argv)
   if (parameters.help_mode) return 0;
 
   std::string inputtbme = parameters.s("2bme");
+  std::string inputtbmeNO2B = parameters.s("2bmeNO2B");
   std::string input3bme = parameters.s("3bme");
   std::string input3bme_type = parameters.s("3bme_type");
   std::string no2b_precision = parameters.s("no2b_precision");
@@ -448,6 +449,8 @@ if (opff.file2name != "") {
   Hbare.SetHermitian();
   Operator VNN = Operator(modelspace,0,0,0,particle_rank);
   VNN.SetHermitian();
+  Operator V3N_NO2B = Operator(modelspace,0,0,0,particle_rank);
+  V3N_NO2B.SetHermitian();
   Operator V3N = Operator(modelspace,0,0,0,particle_rank);
   V3N.SetHermitian();
   Operator Trel = Operator(modelspace,0,0,0,particle_rank);
@@ -673,6 +676,16 @@ if (opff.file2name != "") {
     V3N_TransNO -= VNN_Trans;
     V3N_TransNO -= Trel_Trans;
 
+    if (inputtbmeNO2B != "none") {
+      std::cout << "Reading Jacobi NO NO2B 3N files!" << std::endl;
+      rw.ReadBareTBME_np_Darmstadt(inputtbmeNO2B, V3N_NO2B, eMax, 2 * eMax, eMax);
+      V3N_NO2B.SetNumberLegs(4);
+      V3N_NO2B.SetParticleRank(2);
+      std::cout << "Clearing and replacing V3N NO2B part!" << std::endl;
+      V3N_TransNO.TwoBody *= 0.0;
+      V3N_TransNO += hf.TransformToHFBasis(V3N_NO2B);
+    }
+
     std::cout << "Undoing normal ordering in HF!" << std::endl;
     Operator V3N_Trans = V3N_TransNO.UndoNormalOrdering();
 
@@ -682,6 +695,9 @@ if (opff.file2name != "") {
     std::string name_prefix = parameters.s("name_prefix");
     if (name_prefix == "default") {
       name_prefix = "NO2B_3BME_" + reference + "_hw_" + std::to_string(hw) + "_e_" + std::to_string(eMax) + "_E3_" + std::to_string(E3max);
+      if (inputtbmeNO2B != "none") {
+        name_prefix = "JacobiNO_" + name_prefix;
+      }
     }
 
     std::cout << "Writing to file " << name_prefix << "_xb.ornlme !" <<  std::endl;
