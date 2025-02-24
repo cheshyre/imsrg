@@ -12,3 +12,11 @@ build/
 .vscode/
 .cache/
 CMakeUserPresets.json
+input/
+.DS_Store
+local_output/
+*.py
+new_output/
+output/
+scratch/
+scripts/
