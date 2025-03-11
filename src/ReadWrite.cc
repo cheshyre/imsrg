@@ -1028,9 +1028,12 @@ void ReadWrite::ReadBareTBME_Darmstadt( std::string filename, Operator& Hbare, i
 
 /// As for ReadBareTBME_Darmstadt but for modified me2j_np format
 /// At the moment this just is implemented for gzipped files
-void ReadWrite::ReadBareTBME_np_Darmstadt( std::string filename, Operator& Hbare, int emax, int Emax, int lmax)
+void ReadWrite::ReadBareTBME_np_Darmstadt( std::string filename, Operator& Hbare, int emax, int Emax, int lmax, int Jmax)
 {
 
+  if (Jmax == -1) {
+    Jmax = 2 * emax + 1;
+  }
   File2N = filename;
   Aref = Hbare.GetModelSpace()->GetAref();
   Zref = Hbare.GetModelSpace()->GetZref();
@@ -1040,7 +1043,7 @@ void ReadWrite::ReadBareTBME_np_Darmstadt( std::string filename, Operator& Hbare
     boost::iostreams::filtering_istream zipstream;
     zipstream.push(boost::iostreams::gzip_decompressor());
     zipstream.push(infile);
-    ReadBareTBME_np_Darmstadt_from_stream(zipstream, Hbare,  emax, Emax, lmax);
+    ReadBareTBME_np_Darmstadt_from_stream(zipstream, Hbare,  emax, Emax, lmax, Jmax);
   }
 }
 
@@ -1380,7 +1383,7 @@ void ReadWrite::ReadBareTBME_Darmstadt_from_stream( T& infile, Operator& Hbare, 
 // The nnnn and pppp matrix elements should stay invariant
 // As the me2j also these matrix elements are unnormalized!
 template<class T>
-void ReadWrite::ReadBareTBME_np_Darmstadt_from_stream( T& infile, Operator& Hbare, int emax, int Emax, int lmax)
+void ReadWrite::ReadBareTBME_np_Darmstadt_from_stream( T& infile, Operator& Hbare, int emax, int Emax, int lmax, int J2max)
 {
   if ( !infile.good() )
   {
@@ -1456,6 +1459,9 @@ void ReadWrite::ReadBareTBME_np_Darmstadt_from_stream( T& infile, Operator& Hbar
              // File is read here.
              // Matrix elements are written in the file in ordering npnp, pnpn, nnnn, pnnp, nppn, pppp
              infile >> tbme_npnp >> tbme_pnpn >> tbme_nn >> tbme_pnnp >> tbme_nppn  >> tbme_pp;
+             if (J > J2max) {
+              continue;
+             }
 
              if (a>=norb or b>=norb or c>=norb or d>=norb) continue;
              // Normalization. The TBMEs are read in un-normalized.
