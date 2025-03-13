@@ -676,6 +676,11 @@ if (opff.file2name != "") {
   return 0;
 }
 
+void PrintNorm(Operator& op) {
+  std::cout << "Norm = " << op.Norm() << std::endl;
+  std::cout << "Norm2B = " << op.TwoBodyNorm() << std::endl;
+}
+
 void WriteNO2B3N(const Operator &HNO, Operator &VNN, Operator &V3N,
                  Operator &Trel, const std::string &input3bme,
                  const std::string &inputtbmeNO2B, HartreeFock &hf,
@@ -700,10 +705,13 @@ void WriteNO2B3N(const Operator &HNO, Operator &VNN, Operator &V3N,
       Operator V3N_TransNO = HNO;
       V3N_TransNO.SetNumberLegs(4);
       V3N_TransNO.SetParticleRank(2);
+      PrintNorm(V3N_TransNO);
 
       std::cout << "Removing VNN and Trel in HF!" << std::endl;
       V3N_TransNO -= VNN_Trans;
+      PrintNorm(V3N_TransNO);
       V3N_TransNO -= Trel_Trans;
+      PrintNorm(V3N_TransNO);
 
       // if (inputtbmeNO2B != "none") {
       //   std::cout << "Reading Jacobi NO NO2B 3N files!" << std::endl;
@@ -718,9 +726,11 @@ void WriteNO2B3N(const Operator &HNO, Operator &VNN, Operator &V3N,
 
       std::cout << "Undoing normal ordering in HF!" << std::endl;
       Operator V3N_Trans = V3N_TransNO.UndoNormalOrdering();
+      PrintNorm(V3N_Trans);
 
       std::cout << "Transforming V3N from HF to HO!" << std::endl;
       V3N = hf.TransformFromHFBasis(V3N_Trans);
+      PrintNorm(V3N);
 
       if (name_prefix == "default") {
         name_prefix = "NO2B_3BME_" + reference + "_hw_" + std::to_string(hw) +
