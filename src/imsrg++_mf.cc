@@ -745,60 +745,61 @@ void WriteNO2B3N(const Operator &HNO, Operator &VNN, Operator &V3N,
     } else {
       int J2max = 11;
       int J2min = 6;
+      std::string param_name_prefix = name_prefix;
       for (int J2lim = J2min; J2lim <= J2max; J2lim += 1) {
         std::cout << "Clearing V3N!" << std::endl;
-      V3N *= 0.0;
-      std::cout << "Clearing V3N_NO2B!" << std::endl;
-      V3N_NO2B *= 0.0;
-      std::cout << "Handling input 3BME!" << std::endl;
-      VNN.SetNumberLegs(4);
-      VNN.SetParticleRank(2);
-      Trel.SetNumberLegs(4);
-      Trel.SetParticleRank(2);
-      std::cout << "Transforming Trel and VNN to HF!" << std::endl;
-      Operator VNN_Trans = hf.TransformToHFBasis(VNN);
-      Operator Trel_Trans = hf.TransformToHFBasis(Trel);
-      std::cout << "Extracting V3N from HNO in HF!" << std::endl;
-      Operator V3N_TransNO = HNO;
-      V3N_TransNO.SetNumberLegs(4);
-      V3N_TransNO.SetParticleRank(2);
+        V3N *= 0.0;
+        std::cout << "Clearing V3N_NO2B!" << std::endl;
+        V3N_NO2B *= 0.0;
+        std::cout << "Handling input 3BME!" << std::endl;
+        VNN.SetNumberLegs(4);
+        VNN.SetParticleRank(2);
+        Trel.SetNumberLegs(4);
+        Trel.SetParticleRank(2);
+        std::cout << "Transforming Trel and VNN to HF!" << std::endl;
+        Operator VNN_Trans = hf.TransformToHFBasis(VNN);
+        Operator Trel_Trans = hf.TransformToHFBasis(Trel);
+        std::cout << "Extracting V3N from HNO in HF!" << std::endl;
+        Operator V3N_TransNO = HNO;
+        V3N_TransNO.SetNumberLegs(4);
+        V3N_TransNO.SetParticleRank(2);
 
-      std::cout << "Removing VNN and Trel in HF!" << std::endl;
-      V3N_TransNO -= VNN_Trans;
-      V3N_TransNO -= Trel_Trans;
+        std::cout << "Removing VNN and Trel in HF!" << std::endl;
+        V3N_TransNO -= VNN_Trans;
+        V3N_TransNO -= Trel_Trans;
 
-      std::cout << "Reading Jacobi NO NO2B 3N files!" << std::endl;
-      rw.ReadBareTBME_np_Darmstadt(inputtbmeNO2B, V3N_NO2B, eMax, 2 * eMax,
-                                    eMax);
-      V3N_NO2B.SetNumberLegs(4);
-      V3N_NO2B.SetParticleRank(2);
-      std::cout << "Clearing and replacing V3N NO2B part!" << std::endl;
-      V3N_TransNO.TwoBody *= 0.0;
-      V3N_TransNO += hf.TransformToHFBasis(V3N_NO2B);
+        std::cout << "Reading Jacobi NO NO2B 3N files!" << std::endl;
+        rw.ReadBareTBME_np_Darmstadt(inputtbmeNO2B, V3N_NO2B, eMax, 2 * eMax,
+                                      eMax, J2lim);
+        V3N_NO2B.SetNumberLegs(4);
+        V3N_NO2B.SetParticleRank(2);
+        std::cout << "Clearing and replacing V3N NO2B part!" << std::endl;
+        V3N_TransNO.TwoBody *= 0.0;
+        V3N_TransNO += hf.TransformToHFBasis(V3N_NO2B);
 
-      std::cout << "Undoing normal ordering in HF!" << std::endl;
-      Operator V3N_Trans = V3N_TransNO.UndoNormalOrdering();
+        std::cout << "Undoing normal ordering in HF!" << std::endl;
+        Operator V3N_Trans = V3N_TransNO.UndoNormalOrdering();
 
-      std::cout << "Transforming V3N from HF to HO!" << std::endl;
-      V3N = hf.TransformFromHFBasis(V3N_Trans);
+        std::cout << "Transforming V3N from HF to HO!" << std::endl;
+        V3N = hf.TransformFromHFBasis(V3N_Trans);
 
-      if (name_prefix == "default") {
-        name_prefix = "JacobiNO2B_NO2B_3BME_" + reference + "_hw_" + std::to_string(hw) +
-                      "_e_" + std::to_string(eMax) + "_E3_" +
-                      std::to_string(E3max) + "_Jtotmax_" + std::to_string(J2lim);
-      }
+        if (param_name_prefix == "default") {
+          name_prefix = "JacobiNO2B_NO2B_3BME_" + reference + "_hw_" + std::to_string(hw) +
+                        "_e_" + std::to_string(eMax) + "_E3_" +
+                        std::to_string(E3max) + "_Jtotmax_" + std::to_string(J2lim);
+        }
 
-      std::cout << "Writing to file " << name_prefix << "_xb.ornlme !"
-                << std::endl;
-      if (tbme_output_type == "binary") {
-        rw.WriteOakRidgeFull(spb_file, name_prefix + "_0b.ornlme",
-                            name_prefix + "_1b.ornlme",
-                            name_prefix + "_2b.ornlme.bin", V3N, "binary");
-      } else {
-        rw.WriteOakRidgeFull(spb_file, name_prefix + "_0b.ornlme",
-                            name_prefix + "_1b.ornlme",
-                            name_prefix + "_2b.ornlme", V3N, "not_binary");
-      }
+        std::cout << "Writing to file " << name_prefix << "_xb.ornlme !"
+                  << std::endl;
+        if (tbme_output_type == "binary") {
+          rw.WriteOakRidgeFull(spb_file, name_prefix + "_0b.ornlme",
+                              name_prefix + "_1b.ornlme",
+                              name_prefix + "_2b.ornlme.bin", V3N, "binary");
+        } else {
+          rw.WriteOakRidgeFull(spb_file, name_prefix + "_0b.ornlme",
+                              name_prefix + "_1b.ornlme",
+                              name_prefix + "_2b.ornlme", V3N, "not_binary");
+        }
       }
     }
   }
