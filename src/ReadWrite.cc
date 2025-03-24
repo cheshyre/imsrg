@@ -1045,6 +1045,11 @@ void ReadWrite::ReadBareTBME_np_Darmstadt( std::string filename, Operator& Hbare
     zipstream.push(infile);
     ReadBareTBME_np_Darmstadt_from_stream(zipstream, Hbare,  emax, Emax, lmax, Jmax);
   }
+  else
+  {
+    std::ifstream infile(filename);
+    ReadBareTBME_np_Darmstadt_from_stream(infile, Hbare,  emax, Emax, lmax, Jmax);
+  }
 }
 
 void ReadWrite::WriteOakRidgeFull(std::string name_sp, std::string name_no0b, std::string name_no1b, std::string name_no2b, Operator& op, std::string tbme_format)
