@@ -679,6 +679,11 @@ if (opff.file2name != "") {
 void PrintNorm(Operator& op) {
   std::cout << "Norm = " << op.Norm() << std::endl;
   std::cout << "Norm2B = " << op.TwoBodyNorm() << std::endl;
+  std::cout << "0B part = " << op.ZeroBody << std::endl;
+}
+
+void Print0B(Operator& op) {
+  std::cout << "0B part = " << op.ZeroBody << std::endl;
 }
 
 void WriteNO2B3N(const Operator &HNO, Operator &VNN, Operator &V3N,
@@ -699,8 +704,10 @@ void WriteNO2B3N(const Operator &HNO, Operator &VNN, Operator &V3N,
       Trel.SetNumberLegs(4);
       Trel.SetParticleRank(2);
       std::cout << "Transforming Trel and VNN to HF!" << std::endl;
-      Operator VNN_Trans = hf.TransformToHFBasis(VNN);
-      Operator Trel_Trans = hf.TransformToHFBasis(Trel);
+      Operator VNN_Trans = hf.TransformToHFBasis(VNN).DoNormalOrdering();
+      Print0B(VNN_Trans);
+      Operator Trel_Trans = hf.TransformToHFBasis(Trel).DoNormalOrdering();
+      Print0B(Trel_Trans);
       std::cout << "Extracting V3N from HNO in HF!" << std::endl;
       Operator V3N_TransNO = HNO;
       V3N_TransNO.SetNumberLegs(4);
@@ -767,8 +774,8 @@ void WriteNO2B3N(const Operator &HNO, Operator &VNN, Operator &V3N,
         Trel.SetNumberLegs(4);
         Trel.SetParticleRank(2);
         std::cout << "Transforming Trel and VNN to HF!" << std::endl;
-        Operator VNN_Trans = hf.TransformToHFBasis(VNN);
-        Operator Trel_Trans = hf.TransformToHFBasis(Trel);
+        Operator VNN_Trans = hf.TransformToHFBasis(VNN).DoNormalOrdering();
+        Operator Trel_Trans = hf.TransformToHFBasis(Trel).DoNormalOrdering();
         std::cout << "Extracting V3N from HNO in HF!" << std::endl;
         Operator V3N_TransNO = HNO;
         V3N_TransNO.SetNumberLegs(4);
