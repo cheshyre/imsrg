@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <map>
 #include <functional>
+#include <cstdint>
 
 using std::uint64_t;
 

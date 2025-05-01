@@ -6,6 +6,7 @@
 #include <functional>
 #include<iostream>
 #include <gsl/gsl_sf_legendre.h>
+#include <cstdint>
 #include "PhysicalConstants.hh"
 
 using namespace PhysConst;
