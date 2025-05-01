@@ -8,6 +8,8 @@
 #include <map>
 #include <functional>
 
+using std::uint64_t;
+
 /// Class containing the partial wave decomposition of any scalar two-body potential
 /// as described in https://doi.org/10.1016/0375-9474(71)90279-X. The advantages
 /// is that any 2B scalar potential can be splitted into 

@@ -9,6 +9,7 @@
 #include "PhysicalConstants.hh"
 
 using namespace PhysConst;
+using std::uint64_t;
 
 PWD::PWD()
 {
