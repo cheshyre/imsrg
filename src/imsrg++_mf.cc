@@ -44,7 +44,9 @@
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 ///////////////////////////////////////////////////////////////////////////////////
 
+#ifdef USE_MPI
 #include <mpi.h>
+#endif
 
 #include <stdlib.h>
 #include <iostream>
@@ -83,9 +85,11 @@ int main(int argc, char** argv)
 
   int world_size = 1;
   int my_rank = 0;
+  #ifdef USE_MPI
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+#endif
 
   Parameters parameters(argc,argv);
   if (parameters.help_mode) return 0;
@@ -671,7 +675,9 @@ if (opff.file2name != "") {
 
   Hbare.PrintTimes();
 
+  #ifdef USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
+#endif
 
   return 0;
 }

@@ -1,4 +1,6 @@
+#ifdef USE_MPI
 #include <mpi.h>
+#endif
 
 #include "IMSRGSolver.hh"
 #include "Commutator.hh"
@@ -55,7 +57,9 @@ void IMSRGSolver::NewOmega()
     {
       std::ostringstream filename;
       int my_rank = 1;
+      #ifdef USE_MPI
       MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+      #endif
       filename << scratchdir.c_str() << "/OMEGA_" << std::setw(5) << std::setfill('0') << my_rank << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << n_omega_written;
       std::ofstream ofs(filename.str(), std::ios::binary);
       Omega.back().WriteBinary(ofs);
@@ -906,7 +910,9 @@ Operator IMSRGSolver::Transform_Partial(Operator& OpIn, int n)
      Operator omega(Eta);
      std::ostringstream filename;
       int my_rank = 1;
+      #ifdef USE_MPI
       MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+      #endif
      filename << scratchdir.c_str() << "/OMEGA_" << std::setw(5) << std::setfill('0') << my_rank << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << i;
      std::ifstream ifs(filename.str(),std::ios::binary);
      omega.ReadBinary(ifs);
@@ -944,7 +950,9 @@ Operator IMSRGSolver::Transform_Partial(Operator&& OpIn, int n)
      Operator omega(Eta);
      std::ostringstream filename;
       int my_rank = 1;
+      #ifdef USE_MPI
       MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+      #endif
      filename << scratchdir.c_str() << "/OMEGA_" << std::setw(5) << std::setfill('0') << my_rank << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << i;
      std::ifstream ifs(filename.str(),std::ios::binary);
      omega.ReadBinary(ifs);
@@ -981,7 +989,9 @@ void IMSRGSolver::FlushOmegaToScratch()
   {
     std::stringstream filename;
       int my_rank = 1;
+      #ifdef USE_MPI
       MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+      #endif
     filename << scratchdir << "/OMEGA_" << std::setw(5) << std::setfill('0') << my_rank << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << i+n_omega_written;
     std::ofstream ofs(filename.str(), std::ios::binary);
     Omega[i].WriteBinary(ofs);
@@ -1003,14 +1013,18 @@ void IMSRGSolver::CleanupScratch()
   {
     std::ostringstream filename;
       int my_rank = 1;
+      #ifdef USE_MPI
       MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+      #endif
     filename << scratchdir << "/OMEGA_" << std::setw(5) << std::setfill('0') << my_rank << std::setw(6) << std::setfill('0') << getpid() << std::setw(3) << std::setfill('0') << i;
     if ( remove(filename.str().c_str()) !=0 )
     {
       std::cout << "Error when attempting to delete " << filename.str() << std::endl;
     }
   }
+  #ifdef USE_MPI
   MPI_Finalize();
+  #endif
 }
 
 // This doesn't really work all that well. Probably shouldn't use it.

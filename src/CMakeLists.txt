@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 
 option(IMSRG_BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
+option(IMSRG_BUILD_WITH_MPI "Build with MPI support" OFF)
 
 # Determine if imsrg++ is built as a subproject (using add_subdirectory)
 # or if it is the main project.
@@ -21,13 +22,17 @@ endif()
 
 project(imsrg++ VERSION 0.1.0)
 
+cmake_policy(SET CMP0167 NEW)
+
 find_package(OpenMP REQUIRED)
 find_package(BLAS REQUIRED)
-find_package(MPI REQUIRED)
 find_package(GSL REQUIRED)
 find_package(Boost REQUIRED)
 find_package(ZLIB REQUIRED)
+if(IMSRG_BUILD_WITH_MPI)
+find_package(MPI REQUIRED)
 message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
+endif()
 
 
 set(CMAKE_CXX_STANDARD 14)
@@ -279,12 +284,23 @@ target_link_libraries(
     ThreeBodyME
     PRIVATE
     OpenMP::OpenMP_CXX
-    MPI::MPI_CXX
     IMSRGBoostZip
     AngMom
     PhysicalConstants
     Version
 )
+if(IMSRG_BUILD_WITH_MPI)
+target_compile_definitions(
+    ReadWrite
+    PRIVATE
+    USE_MPI="true"
+)
+target_link_libraries(
+    ReadWrite
+    PRIVATE
+    MPI::MPI_CXX
+)
+endif()
 
 add_library(
     IMSRGSolver
@@ -300,8 +316,20 @@ target_link_libraries(
     PRIVATE
     Commutator
     Boost::boost
+)
+
+if(IMSRG_BUILD_WITH_MPI)
+target_compile_definitions(
+    IMSRGSolver
+    PUBLIC
+    USE_MPI="true"
+)
+target_link_libraries(
+    IMSRGSolver
+    PRIVATE
     MPI::MPI_CXX
 )
+endif()
 
 add_library(
     Commutator232
@@ -583,8 +611,19 @@ target_link_libraries(
     PhysicalConstants
     Version
     OpenMP::OpenMP_CXX
+)
+if(IMSRG_BUILD_WITH_MPI)
+target_compile_definitions(
+    imsrg++_3n_combine
+    PUBLIC
+    USE_MPI="true"
+)
+target_link_libraries(
+    imsrg++_3n_combine
+    PUBLIC
     MPI::MPI_CXX
 )
+endif()
 
 add_executable(
     imsrg++
@@ -598,8 +637,19 @@ target_link_libraries(
     PhysicalConstants
     Version
     OpenMP::OpenMP_CXX
+)
+if(IMSRG_BUILD_WITH_MPI)
+target_compile_definitions(
+    imsrg++
+    PUBLIC
+    USE_MPI="true"
+)
+target_link_libraries(
+    imsrg++
+    PUBLIC
     MPI::MPI_CXX
 )
+endif()
 
 add_executable(
     imsrg++_mf
@@ -613,8 +663,20 @@ target_link_libraries(
     PhysicalConstants
     Version
     OpenMP::OpenMP_CXX
+)
+
+if(IMSRG_BUILD_WITH_MPI)
+target_compile_definitions(
+    imsrg++_mf
+    PUBLIC
+    USE_MPI="true"
+)
+target_link_libraries(
+    imsrg++_mf
+    PUBLIC
     MPI::MPI_CXX
 )
+endif()
 
 add_executable(
     unit_test
