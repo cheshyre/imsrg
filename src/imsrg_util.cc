@@ -7,6 +7,7 @@
 #include "M0nu.hh"
 #include "omp.h"
 #include <cstdlib>
+#include <fstream>
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_sf_bessel.h> // to use bessel functions
 #include <gsl/gsl_sf_laguerre.h>
@@ -108,6 +109,7 @@ namespace imsrg_util
       else if (opname == "M1L")           theop =  MagneticMultipoleOp_pn(modelspace,1,"orbit") ;
       else if (opname == "Fermi")         theop =  AllowedFermi_Op(modelspace) ;
       else if (opname == "GamowTeller")   theop =  AllowedGamowTeller_Op(modelspace) ;
+      else if (opname == "GamowTeller2BC")   theop =  AllowedGamowTellerNO1B2BC_Op(modelspace) ;
       else if (opname == "Iso2")          theop =  Isospin2_Op(modelspace) ;
       else if (opname == "R2CM")          theop =  R2CM_Op(modelspace) ;
       else if (opname == "Trel")          theop =  Trel_Op(modelspace) ;
@@ -2856,6 +2858,25 @@ Operator FourierBesselCoeff(ModelSpace& modelspace, int nu, double R, std::set<i
         double sixj = modelspace.GetSixJ(0.5,0.5,1.0,oj.j2/2.,oi.j2/2.,oi.l);
         double M_gt = 2 * modelspace.phase(oi.l+oi.j2/2.0+1.5) * sqrt((oi.j2+1)*(oj.j2+1)) * sqrt(1.5) * sixj;
         GT.OneBody(i,j) = M_gt;
+      }
+    }
+    return GT;
+  }
+
+  Operator AllowedGamowTellerNO1B2BC_Op(ModelSpace& modelspace)
+  {
+    Operator GT(modelspace,1,1,0,2);
+    GT.SetHermitian();
+    std::ifstream fin("gt_2bc_beta_5.txt");
+    int norbits = modelspace.GetNumberOrbits();
+
+    int i = 0;
+    int j = 0;
+    double me = 0.0;
+    while (fin.peek() != EOF) {
+      fin >> i >> j >> me;
+      if ((i < norbits) && (j < norbits)) {
+        GT.OneBody(i, j) = me;
       }
     }
     return GT;

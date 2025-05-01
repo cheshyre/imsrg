@@ -104,6 +104,7 @@ namespace imsrg_util
  Operator Isospin2_Op(ModelSpace& modelspace);
  Operator AllowedFermi_Op(ModelSpace& modelspace);
  Operator AllowedGamowTeller_Op(ModelSpace& modelspace);
+ Operator AllowedGamowTellerNO1B2BC_Op(ModelSpace& modelspace);
  Operator Sigma_Op(ModelSpace& modelspace);
  Operator Sigma_Op_pn(ModelSpace& modelspace, std::string pn);
  Operator L_Op(ModelSpace& modelspace);
