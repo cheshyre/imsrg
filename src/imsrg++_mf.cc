@@ -455,6 +455,9 @@ if (opff.file2name != "") {
     std::cout << std::endl;
   }
 
+  Operator sig_tau = imsrg_util::OperatorFromString(modelspace, "GamowTeller");
+
+
 
 //  std::cout << "Making the Hamiltonian..." << std::endl;
   int particle_rank = input3bme=="none" ? 2 : 3;
@@ -468,6 +471,10 @@ if (opff.file2name != "") {
   V3N.SetHermitian();
   Operator Trel = Operator(modelspace,0,0,0,particle_rank);
   Trel.SetHermitian();
+  Operator T = Operator(modelspace,0,0,0,particle_rank);
+  T.SetHermitian();
+  Operator TCM = Operator(modelspace,0,0,0,particle_rank);
+  TCM.SetHermitian();
 
 
   Commutator::SetUseGooseTank(goose_tank);
@@ -567,6 +574,14 @@ if (opff.file2name != "") {
       std::exit(EXIT_FAILURE);
     }
   }
+
+  T = imsrg_util::OperatorFromString(modelspace, "Tlab") / hw;
+  TCM = imsrg_util::OperatorFromString(modelspace, "TCM") / hw * targetMass;
+
+  // rw.WriteMSchemeFull("../VNN_hw16", VNN);
+  // rw.WriteMSchemeFull("../T_nohw", T);
+  // rw.WriteMSchemeFull("../TCM_nohwnoA", TCM);
+  // exit(0);
 
   // Add an external harmonic trap
   if ( hw_trap > 0 )
@@ -668,6 +683,16 @@ if (opff.file2name != "") {
   {
     HNO = Hbare.DoNormalOrdering();
   }
+  // hf.PrintSPEandWF();
+
+  // sig_tau = hf.TransformToHFBasis(sig_tau);
+  // for (const auto& p : modelspace.all_orbits) {
+  //   for (const auto& q: modelspace.all_orbits) {
+  //     std::cout << p << " " << q << " " << sig_tau.OneBody(p, q) << std::endl;
+  //   }
+  // }
+  // exit(0);
+  Operator Tlab = hw * T;
 
   WriteNO2B3N(HNO, VNN, V3N, Trel, input3bme, inputtbmeNO2B, hf, rw, V3N_NO2B,
               parameters.s("name_prefix"), parameters.s("2bme_output_type"),
@@ -745,6 +770,10 @@ void WriteNO2B3N(const Operator &HNO, Operator &VNN, Operator &V3N,
       V3N = hf.TransformFromHFBasis(V3N_Trans);
       PrintNorm(V3N);
 
+      std::cout << "Adding Trel and VNN back to V3N!" << std::endl;
+      V3N += Trel;
+      V3N += VNN;
+
       if (name_prefix == "default") {
         name_prefix = "NO2B_3BME_" + reference + "_hw_" + std::to_string(hw) +
                       "_e_" + std::to_string(eMax) + "_E3_" +
@@ -812,6 +841,10 @@ void WriteNO2B3N(const Operator &HNO, Operator &VNN, Operator &V3N,
         std::cout << "Transforming V3N from HF to HO!" << std::endl;
         V3N = hf.TransformFromHFBasis(V3N_Trans);
         PrintNorm(V3N);
+
+        std::cout << "Adding Trel and VNN back to V3N!" << std::endl;
+        V3N += Trel;
+        V3N += VNN;
 
         if (param_name_prefix == "default") {
           name_prefix = "JacobiNO2B_NO2B_3BME_" + reference + "_hw_" + std::to_string(hw) +
