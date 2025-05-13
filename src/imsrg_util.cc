@@ -135,6 +135,13 @@ namespace imsrg_util
       else if (opname == "OccRef")        theop =  NumberOpRef( modelspace );
       else if (opname == "LdotS")         theop =  LdotS_Op( modelspace);
       else if (opname == "DGT")           theop = M0nu::DGT_Op(modelspace);
+      else if (opnamesplit[0] == "DaggerAt")
+      {
+        double rr;
+        std::istringstream(opnamesplit[1]) >> rr;
+        index_t Q = modelspace.String2Index({opnamesplit[2]})[0];
+        theop =  CreationAtR(modelspace,rr, Q);
+      }
       else if (opnamesplit[0] =="VGaus")
       {
          double sigma = 1.0;
@@ -1096,6 +1103,24 @@ Operator KineticEnergy_RelativisticCorr(ModelSpace& modelspace)
    TcmOp.profiler.timer["TCM_Op"] += omp_get_wtime() - t_start;
    return TcmOp;
  }
+
+/// Operator whose expectation value gives the creation amplitude at radius R
+/// \f$ a^t(r) = \sum_{i} \phi_i(r) a^{\dagger}_i \f$
+Operator CreationAtR(ModelSpace& modelspace, double R, index_t Q)
+{
+  Operator dag(modelspace);
+  dag.SetNumberLegs(3);
+  dag.SetQSpaceOrbit(Q);
+  double hw = modelspace.GetHbarOmega();
+  dag.SetNonHermitian();
+  for (auto i : modelspace.all_orbits)
+  {
+    Orbit& oi = modelspace.GetOrbit(i);
+    dag.OneBody(i,0) = HO_Radial_psi(oi.n,oi.l,hw,R);
+  }
+  std::cout << "Making a dagger operator. I think Q = " << Q << std::endl;
+  return dag;
+}
 
 
  // evaluate <bra| p1*p2/2 | ket> 

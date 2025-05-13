@@ -94,6 +94,7 @@ namespace imsrg_util
  Operator R2_2body_Op(ModelSpace& modelspace, std::string option);
  Operator DensityAtR(ModelSpace& modelspace, double R, std::string pn);
  Operator FormfactorAtQ(ModelSpace& modelspace, double q, std::string pn);
+ Operator CreationAtR(ModelSpace& modelspace, double R, index_t Q);
 // Operator ProtonDensityAtR(ModelSpace& modelspace, double R);
 // Operator NeutronDensityAtR(ModelSpace& modelspace, double R);
  Operator RpSpinOrbitCorrection(ModelSpace& modelspace);

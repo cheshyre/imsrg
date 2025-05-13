@@ -1487,6 +1487,17 @@ if (opff.file2name != "") {
       {
         op = op.DoNormalOrdering();
       }
+      else if ( basis == "HF" and opname.find("DaggerHF") == std::string::npos)
+      {    
+        op = hf.TransformToHFBasis(op).DoNormalOrdering();
+        if(opname.find("DaggerAt") != std::string::npos)
+        {    
+          for (auto i : modelspace.all_orbits){
+            if(i == op.GetQSpaceOrbit()) continue;
+            op.OneBody(i,0) = 0.0; // HO -> HF shuffles matrix elements. Setting irrevant ones 0.
+          }    
+        }    
+      }
       else if ( basis == "HF")
       {
         op = hf.TransformToHFBasis(op).DoNormalOrdering();
@@ -1530,7 +1541,28 @@ if (opff.file2name != "") {
 
 
 
+      if(opname.find("DaggerAt") == std::string::npos) {
       op = imsrgsolver.Transform(op);
+      } else {
+        std::cout << "Did not transform operator " << opname << std::endl;
+      }
+
+      if (opname == "Rp2c") {
+        for (const auto& i : modelspace_imsrg.all_orbits) {
+          auto& oi = modelspace_imsrg.GetOrbit(i);
+          if (oi.occ > 0.99 and oi.tz2 == -1) {
+            std::cout << i << " " << modelspace_imsrg.Index2String(i) << " " << modelspace_imsrg.GetZref() * op.OneBody(i, i) << std::endl;
+          }
+        }
+      }
+      if (opname == "Rn2c") {
+        for (const auto& i : modelspace_imsrg.all_orbits) {
+          auto& oi = modelspace_imsrg.GetOrbit(i);
+          if (oi.occ > 0.99 and oi.tz2 == 1) {
+            std::cout << i << " " << modelspace_imsrg.Index2String(i) << " " << modelspace_imsrg.GetNref() * op.OneBody(i, i) << std::endl;
+          }
+        }
+      }
 
       // Unclear whether we should do NO2B here as well...
       // std::cout << "Before renormal ordering Op(5,4) is " << std::setprecision(10) << op.OneBody(5,4) << std::endl;
