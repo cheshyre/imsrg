@@ -1502,6 +1502,17 @@ if (opff.file2name != "") {
       {
         op = hf.TransformToHFBasis(op).DoNormalOrdering();
       }
+      else if ( basis == "NAT" and opname.find("DaggerHF") == std::string::npos)
+      {    
+        op = hf.TransformHOToNATBasis(op).DoNormalOrdering();
+        if(opname.find("DaggerAt") != std::string::npos)
+        {    
+          for (auto i : modelspace.all_orbits){
+            if(i == op.GetQSpaceOrbit()) continue;
+            op.OneBody(i,0) = 0.0; // HO -> NAT shuffles matrix elements. Setting irrevant ones 0.
+          }    
+        }    
+      }
       else if ( basis == "NAT")
       {
         op = hf.TransformHOToNATBasis(op).DoNormalOrdering();
