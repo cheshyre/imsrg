@@ -306,8 +306,17 @@ Operator HFMBPT::TransformHFToNATBasis( Operator& OpHF)
 Operator HFMBPT::TransformHOToNATBasis( Operator& OpHO)
 {
   Operator OpNAT(OpHO);
+   if ( OpNAT.legs%2== 0)
+   {
   OpNAT.OneBody = C_HO2NAT.t() * OpHO.OneBody * C_HO2NAT;
+  }
+   else
+   {
+     OpNAT.OneBody = C.t() * OpHO.OneBody ;
+   }
 
+   if ( OpNAT.legs%2== 0 and OpHO.legs>3)
+   {
   for (auto& it : OpHO.TwoBody.MatEl )
   {
     int ch_bra = it.first[0];
@@ -362,6 +371,11 @@ Operator HFMBPT::TransformHOToNATBasis( Operator& OpHO)
     auto& IN  =  it.second;
     auto& OUT =  OpNAT.TwoBody.GetMatrix(ch_bra,ch_ket);
     OUT  =    Dbra * IN * Dket;
+   }
+  }
+     else
+   {
+    // TODO implement this
    }
    return OpNAT;
 }
