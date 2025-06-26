@@ -224,6 +224,12 @@ void IMSRGSolver::Solve()
   else
     std::cout << "IMSRGSolver: I don't know method " << method << std::endl;
 
+  UpdateEta();
+  if (Eta.Norm() > 2 * eta_criterion) {
+    std::cout << "WARNING: IMSRG flow is not converged!\n";
+    std::cout << "Generator norm is " << Eta.Norm() << "\n";
+  }
+
 }
 
 void IMSRGSolver::UpdateEta()
