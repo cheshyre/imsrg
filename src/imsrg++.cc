@@ -351,6 +351,7 @@ if (opff.file2name != "") {
 
 
   ModelSpace modelspace = ( reference=="default" ? ModelSpace(eMax,valence_space) : ModelSpace(eMax,reference,valence_space) );
+  modelspace.com_beta_ = BetaCM;
 
 //  std::cout << __LINE__ << "  constructed modelspace " << std::endl;
   modelspace.SetE3max(E3max);

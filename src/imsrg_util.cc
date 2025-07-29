@@ -2892,7 +2892,7 @@ Operator FourierBesselCoeff(ModelSpace& modelspace, int nu, double R, std::set<i
   {
     Operator GT(modelspace,1,1,0,2);
     GT.SetHermitian();
-    std::ifstream fin("gt_2bc_beta_5.txt");
+    std::ifstream fin("gt_2bc_beta_" + std::to_string(modelspace.com_beta_) + ".txt");
     int norbits = modelspace.GetNumberOrbits();
 
     int i = 0;

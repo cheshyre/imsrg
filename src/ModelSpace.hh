@@ -285,6 +285,7 @@ class ModelSpace
 //   int Zref;          // Proton number of the normal-ordering reference
    double Acore;      // Average particle number of the core of the valnce space (this should probably always be an integer)
    double Zcore;      // Averate proton number of the core
+   double com_beta_; // Center of mass beta from Gloeckner Lawson
 
 
    std::vector<Orbit> Orbits; // vector of one-body Orbit structs
