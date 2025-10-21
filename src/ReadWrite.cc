@@ -115,6 +115,120 @@ static double GetMschemeMatrixElement_2b(const Operator &Op, int a, int ma,
   return matel;
 }
 
+void ReadWrite::WriteMScheme0B(std::string filename_prefix, Operator& Op) {
+  if (std::abs(Op.ZeroBody) < 1e-6) {
+    return;
+  }
+
+  std::ofstream fout(filename_prefix + "_0B.dat");
+  fout << std::setprecision(12) << Op.ZeroBody << "\n";
+}
+
+static std::vector<std::array<int, 2>> GenerateMSchemeBasis(Operator &Op) {
+
+  std::vector<std::array<int, 2>> basis;
+
+  for (const int p : Op.modelspace->all_orbits) {
+    const auto &op = Op.modelspace->GetOrbit(p);
+
+    const int jjp = op.j2;
+
+    for (int mmp = -1 * jjp; mmp <= jjp; mmp += 2) {
+      basis.push_back({p, mmp});
+    }
+  }
+  return basis;
+}
+
+void ReadWrite::WriteMScheme1B(std::string filename_prefix, Operator& Op) {
+  if (std::abs(Op.OneBodyNorm()) < 1e-6) {
+    return;
+  }
+
+  std::ofstream fout(filename_prefix + "_1B.dat");
+
+  const auto basis = GenerateMSchemeBasis(Op);
+  for (int ind_p = 0; ind_p < basis.size(); ind_p += 1) {
+    const auto& p = basis[ind_p][0];
+    const auto& mmp = basis[ind_p][1];
+    for (int ind_q = 0; ind_q < basis.size(); ind_q += 1) {
+      const auto& q = basis[ind_q][0];
+      const auto& mmq = basis[ind_q][1];
+
+      if (mmp == mmq) {
+        const double me = Op.OneBody(p, q);
+        if (std::abs(me) > 1e-6) {
+          fout << std::setw(4) << ind_p << " " << std::setw(4) << ind_q << " "
+          << std::setw(20) << std::setprecision(12) << me << "\n";
+        }
+      }
+    }
+  }
+}
+
+void ReadWrite::WriteMScheme2B(std::string filename_prefix, Operator& Op) {
+  if (std::abs(Op.TwoBodyNorm()) < 1e-6) {
+    return;
+  }
+  std::ofstream fout(filename_prefix + "_2B.dat");
+
+  const auto basis = GenerateMSchemeBasis(Op);
+  for (int ind_p = 0; ind_p < basis.size(); ind_p += 1) {
+    const auto& p = basis[ind_p][0];
+    const auto& mmp = basis[ind_p][1];
+    for (int ind_q = 0; ind_q < basis.size(); ind_q += 1) {
+      const auto& q = basis[ind_q][0];
+      const auto& mmq = basis[ind_q][1];
+      for (int ind_r = 0; ind_r < basis.size(); ind_r += 1) {
+        const auto& r = basis[ind_r][0];
+        const auto& mmr = basis[ind_r][1];
+        for (int ind_s = 0; ind_s < basis.size(); ind_s += 1) {
+          const auto& s = basis[ind_s][0];
+          const auto& mms = basis[ind_s][1];
+
+          const double me =
+              GetMschemeMatrixElement_2b(Op, p, mmp, q, mmq, r, mmr, s, mms);
+          if (std::abs(me) > 1e-6) {
+            fout << std::setw(4) << ind_p << " " << std::setw(4) << ind_q << " "
+                 << std::setw(4) << ind_r << " " << std::setw(4) << ind_s << " "
+                 << std::setw(20) << std::setprecision(12) << me << "\n";
+          }
+        }
+      }
+    }
+  }
+}
+
+void ReadWrite::WriteMSchemeBasis(std::string filename_prefix, Operator &Op) {
+  std::ofstream fout(filename_prefix + "_basis.dat");
+
+  const auto basis = GenerateMSchemeBasis(Op);
+
+  for (int ind_p = 0; ind_p < basis.size(); ind_p += 1) {
+    const auto& p = basis[ind_p][0];
+    const auto& mmp = basis[ind_p][1];
+    const auto &op = Op.modelspace->GetOrbit(p);
+
+    const int np = op.n;
+    const int lp = op.l;
+    const int jjp = op.j2;
+    const int ttp = op.tz2;
+    const int occ = op.occ;
+
+    fout << std::setw(4) << ind_p << " " << std::setw(4) << np << " "
+          << std::setw(4) << lp << " " << std::setw(4) << jjp << " "
+          << std::setw(4) << mmp << " " << std::setw(4) << ttp << " " 
+          << std::setw(4) << occ << "\n";
+  }
+}
+
+void ReadWrite::WriteMSchemeFull(std::string filename_prefix, Operator& Op) {
+  WriteMSchemeBasis(filename_prefix, Op);
+  WriteMScheme0B(filename_prefix, Op);
+  WriteMScheme1B(filename_prefix, Op);
+  WriteMScheme2B(filename_prefix, Op);
+}
+
 void ReadWrite::WriteMSchemeMH(std::string filename, Operator& Op) {
   // Determine channels
   std::vector<std::tuple<int, int, int, int, int>> channels;

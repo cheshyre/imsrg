@@ -63,6 +63,11 @@ class ReadWrite
    void Jacobi2b_Channel_UnHash(size_t key, int& S, int& T, int& Tz, int& J);
    void ReadDarmstadt_2bodyRel( std::string filename, Operator& Op );
    void Read2bCurrent_Navratil( std::string filename, Operator& Op);
+   void WriteMScheme0B(std::string filename_prefix, Operator& Op);
+   void WriteMScheme1B(std::string filename_prefix, Operator& Op);
+   void WriteMScheme2B(std::string filename_prefix, Operator& Op);
+   void WriteMSchemeBasis(std::string filename_prefix, Operator& Op);
+   void WriteMSchemeFull(std::string filename_prefix, Operator& Op);
    void WriteMSchemeMH(std::string filename, Operator& Op);
    void WriteMSchemeMHFull(std::string filename, Operator& Op);
    void Write_me2j( std::string filename, Operator& op, int emax, int e2max, int lmax);
