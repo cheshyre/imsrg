@@ -5,7 +5,6 @@ add_library(
 )
 target_link_libraries(
     IMSRGBoostZip
-    PUBLIC
     Boost::boost
-    ZLIB::ZLIB
+    # ZLIB::ZLIB
 )
