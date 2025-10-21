@@ -46,6 +46,8 @@ std::map< std::string, std::vector<std::string> > ModelSpace::ValenceSpaces  {
 { "nod5-sdfp-shell"  ,      {"Si28", "p0d3","n0d3","p1s1","n1s1","p0f7","n0f7","p0f5","n0f5","p1p3","n1p3","p1p1","n1p1"}},
 { "sd3NR-shell"  ,   {"Si34","p0d3","p1s1","n0f7","n1p3", "n1p1", "n0f5"}},
 { "gds-shell" ,        {"Zr80","p0g9","n0g9","p0g7","n0g7","p1d5","n1d5","p1d3","n1d3","p2s1","n2s1"}}, // This is a big valence space, more than a few particles will be a serious shell model diagonalization
+{"pb208-protons", {"Pb208", "p0h9", "p1f7", "p1f5", "p2p3", "p2p1", "p0i13"}}, // N = 126, 82 <= Z <= 126
+{"pb164-neutrons", {"Pb164", "n0h9", "n1f7", "n1f5", "n2p3", "n2p1", "n0i13"}}, // Z=82, 82 <= N <= 126
 };
 
 
